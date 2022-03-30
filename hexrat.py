@@ -25,14 +25,14 @@ asafe = hexchat.get_info("nick") # target for safe mode messages
 drillbot = "DrillSqueak[BOT]"
 mecha = "MechaSqueak[BOT]" # MechaSqueak[BOT] for live
 
-scr = mixer.Sound(soundpath + "code_red.wav")
-sst = mixer.Sound(soundpath + "Iroquois_1.wav")
-ssk = mixer.Sound(soundpath + "xp_shutdown.mp3")
-stas = mixer.Sound(soundpath + "tasukete.wav")
-smgs = mixer.Sound(soundpath + "mgs_alert.mp3")
-srat = mixer.Sound(soundpath + "rat2.wav")
-sring = mixer.Sound(soundpath + "sonic_ring.wav")
-sbar = mixer.Sound(soundpath + "checkout.wav")
+scr = mixer.Sound(soundpath + "code_red.wav") #sound for code red cases
+sst = mixer.Sound(soundpath + "Iroquois_1.wav") #sound for standard cases
+ssk = mixer.Sound(soundpath + "xp_shutdown.mp3") #sound for ignored cases
+stas = mixer.Sound(soundpath + "tasukete.wav") #sound for hatsignals
+smgs = mixer.Sound(soundpath + "mgs_alert.mp3") #sound for manual ratsignals
+srat = mixer.Sound(soundpath + "rat2.wav") #sound for jump calls/standdowns
+sring = mixer.Sound(soundpath + "sonic_ring.wav") #sound for !prep
+sbar = mixer.Sound(soundpath + "checkout.wav") #sound for startup
 
 
 aliastarget = alive  #Alias texts will be sent to this target. Can be switched with /safe and /arm
