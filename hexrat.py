@@ -16,7 +16,7 @@ if platform.system()=="Linux":
      soundpath = "/media/camo_d/HexChat/sounds/"
      logging = False
 elif platform.system()=="Windows": 
-     soundpath = "D:\HexChat\sounds\\"
+     soundpath = "D:\\HexChat\\sounds\\" # Use double \\-s!
      logging = True
 
 # Editable parameters ---------------------------------------------------------------------------------------------------------------------------------
