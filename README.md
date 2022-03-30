@@ -1,5 +1,3 @@
-# hexrat
-
 HexRat is currently a prototype and is provided AS IS. 
 It worked on my end (under both windows and Linux, though some features mostly VA related are disabled on linux) and I consider it generally safe for ratting but YOU are solely responsible if it accidentally or erronously goofs up, or if you miss something important because it was filtered
 
