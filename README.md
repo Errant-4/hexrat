@@ -1,4 +1,4 @@
-HexRat is currently a prototype and is provided AS IS. 
+HexRat is currently a prototype and is provided AS IS. It may also change, suffer feature creep, or never be updated again with no warning
 It worked on my end (under both windows and Linux, though some features are disabled on Linux. mostly VA related so you won't miss them) and I consider it generally safe for ratting but YOU are solely responsible if you use this and it accidentally or erronously goofs up, or if you miss something important because it was filtered
 
 It should not throw errors at you anymore, if it does please let me know
