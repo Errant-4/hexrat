@@ -8,16 +8,16 @@ Known issue: it will throw errors if it's left running while the desktop is lock
 
 When it's cutting Mecha or Quit-messages short, it's set for the exact font and window size I'm using, results may vary
 
-#Installation
-When you install HexChat, select the Python Interface for install as well. If you don't have it you will need to run the installer again to add the interface. It should trigger an install for Python
+# Installation
+1. When you install HexChat, select the Python Interface for install as well. If you don't have it you will need to run the installer again to add the interface. It should trigger an install for Python
 
-You will need additional Python modules: "pyperclip" and "pygame"
+2. You will need additional Python modules: "pyperclip" and "pygame"
 
-Open hexrat.py and change the path and/or names for the sound files you want to use for the designated event types
+3. Open hexrat.py and change the path and/or names for the sound files you want to use for the designated event types
 
-put hexrat.py and hexrat-loader.py in Hexchat/addons and it will auto-start.
+4. put hexrat.py and hexrat-loader.py in Hexchat/addons and it will auto-start.
 
-Recommended: use a dark color scheme or you are going to have a bad time with the colors I set. You can use the provided colors.conf
+5. Recommended: use a dark color scheme or you are going to have a bad time with the colors I set. You can use the provided colors.conf
 
 If it crashes or you just want to reload it faster, type /hr
 
