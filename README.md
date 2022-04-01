@@ -8,7 +8,7 @@ Known issue: it will throw errors if it's left running while the desktop is lock
 
 When it's cutting Mecha or Quit-messages short, it's set for the exact font and window size I'm using, results may vary
 
-Installation
+#Installation
 When you install HexChat, select the Python Interface for install as well. If you don't have it you will need to run the installer again to add the interface. It should trigger an install for Python
 
 You will need additional Python modules: "pyperclip" and "pygame"
