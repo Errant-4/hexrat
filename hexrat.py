@@ -13,8 +13,7 @@ from pathlib import Path
 mixer.init()
 
 if platform.system() == "Linux":
-     filepath = Path(Path.home(), ".config/HexChat")
-     print(filepath)     
+     filepath = Path(Path.home(), ".config/hexchat")
      logging = False
 elif platform.system() == "Windows": 
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
@@ -26,10 +25,21 @@ file.close
 for i in config:
      if i[:17] == "<soundpath_linux>": 
           if platform.system() == "Linux":
-               soundpath = i[17:]
+               if i.find("$HOME/") > -1:
+                    j = i.find("$HOME/")
+                    soundpath = Path(Path.home(),i[j+6:])
+               else:
+                    soundpath = i[17:]
+               soundpath = str(soundpath)
      elif i[:19] == "<soundpath_windows>": 
           if platform.system() == "Windows":
-               soundpath = i[19:]               
+               if i.find("$HOME\\") > -1:
+                    j = i.find("$HOME\\")
+                    soundpath = Path(Path.home(),i[j+6:])
+                    soundpath = str(soundpath) + "\\"
+               else:
+                    soundpath = i[19:]
+               soundpath = str(soundpath)
      elif i[:15] == "<sound_codered>":         
           scr = mixer.Sound(soundpath + i[15:])
      elif i[:16] == "<sound_standard>": 
@@ -41,7 +51,7 @@ for i in config:
      elif i[:13] == "<sound_alert>": 
           smgs = mixer.Sound(soundpath + i[13:])
      elif i[:12] == "<sound_prep>": 
-          sring = mixer.Sound(soundpath + i[12:])   
+          sring = mixer.Sound(soundpath + i[12:])
      elif i[:14] == "<sound_squeak>": 
           srat = mixer.Sound(soundpath + i[14:])
      elif i[:13] == "<sound_start>": 
@@ -110,8 +120,8 @@ def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
                if word[0] == clients[i]:
                     your = ""
 
-                    if reason.upper().find("BANNED"):
-                         j = 333
+                    if reason.upper().find("BANNED"): #Ban notifications are given extra space
+                         j = 777
                     if as_client == word[0]:
                          your = "Your client"
                     print("\00304\026" + your + "\00317\026\00314 #" + str(i) + " " + word[0] + " \00304quit\00314 " + reason[:j-len(word[0])-len(your)])
@@ -218,7 +228,7 @@ def chatwatch_cb(word, word_eol, userdata):
                     smgs.play()
                     print("\00304 Unlisted reference point! \00315"+ sysref)
                else:
-                    print("\00315Sysref :" + sysref)
+                    print("\00315Sysref :" + sysref) #################################################################################
                     if sysref == "Sol":
                          distb = 174
                     elif sysref == "Fuelum":
@@ -233,28 +243,25 @@ def chatwatch_cb(word, word_eol, userdata):
                if mess.find(" LY from ") > -1:
                     i = mess.find(" LY from ")
                     distance = mess[i-7:i]
-               for i in range (5):
-                    if not distance[i:i+1].isdigit() or distance[i:i+1]==".":
-                         distance = distance[1:]
-               if distance[-2:-1] == ".":
-                    distance = distance[:-2]
-               
-               
-               print("\00315Distnce:" + distance)
-               print("\00315RefDist:" + str(distb))
-               #try:
-               totaldist = int(distance) + distb
-               if totaldist <=300:
-                         sbar.play()
-                         print("\00315Estimated: Short (~" + str(totaldist) + " LY from Jackson's)")
-               elif totaldist <=1000:
-                         sbar.play()
-                         print("\00315Estimated: Med (~" + str(totaldist) + " LY from Jackson's)")
-               elif totaldist > 1000:
-                         sbar.play()
-                         print("\00315Estimated: LRR (~" + str(totaldist) + " LY from Jackson's)")
-               #except:
-               #     print("Error calculating distance")
+                    print("O:"+distance) #################################################################################
+                    if distance.find(" ") > -1:
+                         distance = distance[distance.find(" ")+1:]
+                    print("F:"+distance) ####################################################################################
+                    if distance[-2:-1] == ".":
+                         distance = distance[:-2]
+                    print("\00315Distnce:" + distance) #################################################################################
+                    print("\00315RefDist:" + str(distb)) #################################################################################
+                    try:
+                         totaldist = int(distance) + distb
+                         if totaldist <=300:
+                              print("\00315Estimated: Short (~" + str(totaldist) + " LY from Jackson's)")
+                         elif totaldist <=1000:
+                              print("\00315Estimated: Med (~" + str(totaldist) + " LY from Jackson's)")
+                         elif totaldist > 1000:
+                              print("\00315Estimated: LRR (~" + str(totaldist) + " LY from Jackson's)")
+                    except:
+                         smgs.play()
+                         print("\00304Error calculating distance!!")
                
                if platform.system()=="Windows":
                     pyperclip.copy(casclip)
@@ -405,7 +412,8 @@ def chatwatch_cb(word, word_eol, userdata):
           return hexchat.EAT_ALL
 
      elif hexchat.get_info("channel") == alive and MESS.find("IN OPEN") > -1:
-          print("\00308" + modechar + nick + ": \00320\026" + mess)
+          print("\00308" + modechar + nick + ": \00320\026" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316IN OPEN\00316\026\00323" + mess[:MESS.find("IN OPEN")+7:])
+          #print("\00308" + modechar + nick + ": \00320\026" + mess)
           return hexchat.EAT_ALL
 
      elif mess[:1]=='#' and len(mess) < 17:
@@ -414,9 +422,9 @@ def chatwatch_cb(word, word_eol, userdata):
    
      elif nick in gr1 and hexchat.get_info("channel") == "#ratchat": # example custom color rule. All lines on ratchat
           if userdata=="action":
-               print("\00314 * " + modechar + nick + " " + mess)
+               print("\00301 * " + modechar + nick + " " + mess)
           else:
-               print("\00314" + modechar + nick + ": " + mess)
+               print("\00301" + modechar + nick + ": " + mess)
           return hexchat.EAT_ALL
           
      return hexchat.EAT_NONE
@@ -844,3 +852,4 @@ hexchat.hook_print("Open Context", open_cb)
 
 print("\00316>>HEXRAT<< " + __module_version__ +  " initialized")
 sbar.play()
+
