@@ -299,6 +299,7 @@ def chatwatch_cb(word, word_eol, userdata):
           else: # Case number not found. Manual ratsignal?
                print("\00320" + modechar + nick + ": " + mess)
                smgs.play()
+               return hexchat.EAT_ALL
 
      # Message was not a Ratsignal
      
@@ -414,8 +415,7 @@ def chatwatch_cb(word, word_eol, userdata):
           return hexchat.EAT_ALL
 
      elif hexchat.get_info("channel") == alive and MESS.find("IN OPEN") > -1:
-          print("\00308" + modechar + nick + ": \00320\026" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316IN OPEN\00316\026\00323" + mess[:MESS.find("IN OPEN")+7:])
-          #print("\00308" + modechar + nick + ": \00320\026" + mess)
+          print("\00308" + modechar + nick + ": \00323" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316IN OPEN\00317\026\00323" + mess[MESS.find("IN OPEN")+7:])
           return hexchat.EAT_ALL
 
      elif mess[:1]=='#' and len(mess) < 17:
