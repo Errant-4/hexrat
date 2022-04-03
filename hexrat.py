@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'B2 (0403.1348)'
+__module_version__ = 'v0403.1439'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -59,6 +59,8 @@ for i in config:
           sbar = mixer.Sound(soundpath + i[13:])
      elif i[:9] == "<ratmode>": 
           ratmode = i[9:]
+     elif i[:10] == "<copymode>": 
+          copymode = i[10:]
                 
 alive = "#fuelrats" # target for calls/reports/facts
 asafe = hexchat.get_info("nick") # target for safe mode messages
@@ -157,7 +159,7 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
      return hexchat.EAT_NONE
 
 def chatwatch_cb(word, word_eol, userdata):
-     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1
+     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode
      nick = hexchat.strip(word[0])
      mess = hexchat.strip(word[1])
      MESS = mess.upper()
@@ -261,7 +263,10 @@ def chatwatch_cb(word, word_eol, userdata):
                print("\00315Casclip:" + casclip)
 
                if platform.system()=="Windows":
-                    pyperclip.copy(casclip)
+                    if copymode == "va":
+                         pyperclip.copy(casclip)
+                    elif copymode == "system":
+                         pyperclip.copy(systems[casenum])
                if cr > -1 : # CR
                     if pc > -1 :
                          if ratmode == "dispatch":
@@ -432,7 +437,7 @@ def private_cb(word, word_eol, userdata): # Display all private messages in the 
      return hexchat.EAT_NONE   
           
 def pull_cb(word, word_eol, userdata):
-     global clients, systems, as_client, as_casenum, hexback
+     global clients, systems, as_client, as_casenum, hexback, copymode
      hexback = False
      try: 
           if int(word[1]) in range(10) and clients[int(word[1])]!="" and systems[int(word[1])] !="":
@@ -440,10 +445,14 @@ def pull_cb(word, word_eol, userdata):
                as_casenum=word[1]
                casclip = "#" + as_casenum + ":" + clients[int(as_casenum)] + ":" + systems[int(as_casenum)]
                if platform.system()=="Windows":
-                    pyperclip.copy(casclip)
-                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< prepares " + casclip)
-                    hexback = True
-                    return     
+                    if copymode == "va":
+                         pyperclip.copy(casclip)
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< prepares " + casclip)
+                         hexback = True
+                         return
+                    elif copymode == "system":
+                         pyperclip.copy(systems[int(as_casenum)])
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< copies system for " + casclip)                       
           elif int(word[1]) in range(10) and clients[int(word[1])]=="" :
                hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< can't pull #" + word[1] + " - no name")              
           elif int(word[1]) in range(10) and systems[int(word[1])] !="":
@@ -798,7 +807,7 @@ def hexhelp_cb(word, word_eol, userdata):
      hexchat.find_context(channel="#ratchat").prnt("\00316 /board   (list currently active cases)")
      hexchat.find_context(channel="#ratchat").prnt("\00316 /board_set <number> <nick> <system>")
      hexchat.find_context(channel="#ratchat").prnt('\00316 /board_clear <case>  OR "all"')
-     hexchat.find_context(channel="#ratchat").prnt('\00316 /pull <case>  sends case to clipboard fo VA')
+     hexchat.find_context(channel="#ratchat").prnt('\00316 /pull <case>  sends case to clipboard')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /safe   for testing')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /arm     return to live mode')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /jp <case> <jumps>     \00304FORBIDDEN BARRAGE!\00316 Use powers responsibly.')
