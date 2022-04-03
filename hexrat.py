@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'B2 (0401.2001)'
+__module_version__ = 'B2 (0403.1348)'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -31,6 +31,7 @@ for i in config:
                else:
                     soundpath = i[17:]
                soundpath = str(soundpath)
+               print(soundpath)
      elif i[:19] == "<soundpath_windows>": 
           if platform.system() == "Windows":
                if i.find("$HOME\\") > -1:
@@ -214,8 +215,6 @@ def chatwatch_cb(word, word_eol, userdata):
                     print("\00316Probably unroutable system!")
                     casclip = casclip + "."
 
-               print("\00315Casclip:" + casclip)
-               
                sysrefcheck = ["","Sol","Maia","Rodentia","Fuelum"]
                sysref = ""
                if mess.find(" LY from ") > -1:
@@ -223,12 +222,10 @@ def chatwatch_cb(word, word_eol, userdata):
                     j = mess[i:].find(")")
                     sysref = mess[i:i+j]
                     
-
                if sysref not in sysrefcheck:
                     smgs.play()
                     print("\00304 Unlisted reference point! \00315"+ sysref)
                else:
-                    print("\00315Sysref :" + sysref) #################################################################################
                     if sysref == "Sol":
                          distb = 174
                     elif sysref == "Fuelum":
@@ -243,14 +240,10 @@ def chatwatch_cb(word, word_eol, userdata):
                if mess.find(" LY from ") > -1:
                     i = mess.find(" LY from ")
                     distance = mess[i-7:i]
-                    print("O:"+distance) #################################################################################
                     if distance.find(" ") > -1:
                          distance = distance[distance.find(" ")+1:]
-                    print("F:"+distance) ####################################################################################
                     if distance[-2:-1] == ".":
                          distance = distance[:-2]
-                    print("\00315Distnce:" + distance) #################################################################################
-                    print("\00315RefDist:" + str(distb)) #################################################################################
                     try:
                          totaldist = int(distance) + distb
                          if totaldist <=300:
@@ -262,7 +255,11 @@ def chatwatch_cb(word, word_eol, userdata):
                     except:
                          smgs.play()
                          print("\00304Error calculating distance!!")
+               else:
+                    casclip = casclip + "."
                
+               print("\00315Casclip:" + casclip)
+
                if platform.system()=="Windows":
                     pyperclip.copy(casclip)
                if cr > -1 : # CR
@@ -608,6 +605,8 @@ def clear_cb(word, word_eol, userdata):
      global as_casenum, as_client
      as_casenum = "NO CASE ASSIGNED GO AWAY"
      as_client = "NO CASE ASSIGNED GO AWAY"
+     if platform.system()=="Windows":
+                    pyperclip.copy(" ")
      hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared your tracked case")
      return hexchat.EAT_ALL
 
@@ -852,4 +851,3 @@ hexchat.hook_print("Open Context", open_cb)
 
 print("\00316>>HEXRAT<< " + __module_version__ +  " initialized")
 sbar.play()
-
