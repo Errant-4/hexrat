@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'v0403.1439'
+__module_version__ = 'v0406.0930'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -28,10 +28,10 @@ for i in config:
                if i.find("$HOME/") > -1:
                     j = i.find("$HOME/")
                     soundpath = Path(Path.home(),i[j+6:])
+                    soundpath = str(soundpath) + "/"
                else:
                     soundpath = i[17:]
                soundpath = str(soundpath)
-               print(soundpath)
      elif i[:19] == "<soundpath_windows>": 
           if platform.system() == "Windows":
                if i.find("$HOME\\") > -1:
@@ -57,6 +57,8 @@ for i in config:
           srat = mixer.Sound(soundpath + i[14:])
      elif i[:13] == "<sound_start>": 
           sbar = mixer.Sound(soundpath + i[13:])
+     elif i[:13] == "<sound_cheer>": 
+          schr = mixer.Sound(soundpath + i[13:])
      elif i[:9] == "<ratmode>": 
           ratmode = i[9:]
      elif i[:10] == "<copymode>": 
@@ -127,7 +129,7 @@ def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
                          j = 777
                     if as_client == word[0]:
                          your = "Your client"
-                    print("\00304\026" + your + "\00317\026\00314 #" + str(i) + " " + word[0] + " \00304quit\00314 " + reason[:j-len(word[0])-len(your)])
+                    print("\00304\026\00316" + your + " #" + str(i) + "\00317\026\00314 " + word[0] + " \00304\026\00316quit\00317\026\00314 " + reason[:j-len(word[0])-len(your)])
                     return hexchat.EAT_ALL
      elif hexchat.get_info("channel") == "#fuelrats":
           print("\00314" + word[0] + " quit " + reason[:j-len(word[0])])
@@ -146,14 +148,14 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
           as_client = word[1]
      
      if word[0].upper().find("SPATCH") > -1 and word[1].upper().find("SPATCH") == -1 and hexchat.get_info("channel") == "#ratchat":
-          print("\00308" + word[1] + " \00325 reverts back to \00308"+ word[1])
+          print("\00308" + word[1] + " \00324\026\00317 reverts back to \00308"+ word[1])
           hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
           spatcher = "Stuffy"
           return hexchat.EAT_ALL
      elif word[0].upper().find("SPATCH") == -1 and word[1].upper().find("SPATCH") > -1 and hexchat.get_info("channel") == "#ratchat":
           spatcher = word[1]
-          print("\00308" + word[0] + " \00325puts on THE HAT and becomes \00320" + spatcher)
-          hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00304' + spatcher)
+          print("\00308" + word[0] + " \00325puts on THE HAT and becomes \00324\026\00317" + spatcher)
+          hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00324\026\00317' + spatcher)
           return hexchat.EAT_ALL
      
      return hexchat.EAT_NONE
@@ -172,7 +174,7 @@ def chatwatch_cb(word, word_eol, userdata):
 
      if hexchat.get_info("channel") == alive and ((mess[:1] == "!" and MESS[:4] != "!KGB") or MESS.find("WELCOME TO") > -1):
           if spatcher != nick:
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00304' + nick)
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00324\026\00317' + nick)
           spatcher = nick
      if hexchat.get_info("channel") == "#ratchat" and nick == spatcher and MESS.find("JUST PREP") > -1:
           spatcher = "Stuffy"
@@ -225,7 +227,8 @@ def chatwatch_cb(word, word_eol, userdata):
                     sysref = mess[i:i+j]
                     
                if sysref not in sysrefcheck:
-                    smgs.play()
+                    if ratmode != "silent":
+                         smgs.play()
                     print("\00304 Unlisted reference point! \00315"+ sysref)
                else:
                     if sysref == "Sol":
@@ -246,16 +249,18 @@ def chatwatch_cb(word, word_eol, userdata):
                          distance = distance[distance.find(" ")+1:]
                     if distance[-2:-1] == ".":
                          distance = distance[:-2]
+                    print("\00301System: " + d1 + " | " + str(d2) + " | " + str(d3) + " | Dist " + str(d4) +" | RefDist " + str(d5)) ###################################
                     try:
                          totaldist = int(distance) + distb
                          if totaldist <=300:
-                              print("\00315Estimated: Short (~" + str(totaldist) + " LY from Jackson's)")
+                              print("\00315Rough distance: Short (less than " + str(totaldist) + " LY from Jackson's)")
                          elif totaldist <=1000:
-                              print("\00315Estimated: Med (~" + str(totaldist) + " LY from Jackson's)")
+                              print("\00315Rough distance: Med (less than " + str(totaldist) + " LY from Jackson's)")
                          elif totaldist > 1000:
-                              print("\00315Estimated: LRR (~" + str(totaldist) + " LY from Jackson's)")
+                              print("\00315Rough distance: LRR (~ " + str(totaldist) + " LY from Jackson's)")
                     except:
-                         smgs.play()
+                         if ratmode != "silent":
+                              smgs.play()
                          print("\00304Error calculating distance!!")
                else:
                     casclip = casclip + "."
@@ -298,8 +303,8 @@ def chatwatch_cb(word, word_eol, userdata):
                
           else: # Case number not found. Manual ratsignal?
                print("\00320" + modechar + nick + ": " + mess)
-               smgs.play()
                return hexchat.EAT_ALL
+               smgs.play()
 
      # Message was not a Ratsignal
      
@@ -336,8 +341,10 @@ def chatwatch_cb(word, word_eol, userdata):
      elif mess[-15:] == ') has rejoined!': # client rejoined
           return hexchat.EAT_ALL  
         
-     elif (nick == mecha and hexchat.get_info("channel") == "#fuelrats") or nick == drillbot :# make (probably) unimportant lines shorter and less visible
-          if len(mess)>102:
+     elif (nick == mecha and hexchat.get_info("channel") == "#fuelrats" and mess[:9] != "CAUTION: ") or nick == drillbot :# make (probably) unimportant lines shorter and less visible
+          if mess[:9] == "CAUTION: ":
+               return hexchat.EAT_NONE
+          elif len(mess)>102:
                print("\00321" + nick + ": " + mess[:99] + "...")
                if logging==True:
                     logfile=open("D:\hexratlog.txt","a")
@@ -360,17 +367,20 @@ def chatwatch_cb(word, word_eol, userdata):
           if nick == spatcher:
                spatcher = "Stuffy"
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the Dispatcher is actually not.')
-          srat.play()
+          if ratmode != "silent":
+               srat.play()
           return hexchat.EAT_ALL
           
      elif mess[:5]=='!prep' : #Starting Gun for prep
-          sring.play()
+          if ratmode != "silent":
+               sring.play()
           print("\00327" + modechar + nick + "\00327: " + mess)
           return hexchat.EAT_ALL
 
      elif mess.find('#') and (MESS.find("STDN") > -1 or MESS.find("STNDN")> -1): #highlight standdowns
           print("\00308" + modechar + nick + ": \00320" + mess)
-          srat.play()
+          if ratmode != "silent":
+               srat.play()
           return hexchat.EAT_ALL
 
      elif (nick == as_client): #Highlight the tracked client
@@ -397,7 +407,8 @@ def chatwatch_cb(word, word_eol, userdata):
      #          return hexchat.EAT_ALL
                      
      elif MESS.find("HATSIGNAL") > -1: #Hat rats gotta look out for each other
-          stas.play()
+          if ratmode != "silent":
+               stas.play()
         
      elif nick == "RatMama[BOT]" and mess[:30] == "[Paperwork] Paperwork for case": #honestly, who wants to see paperwork?
           print("\00321" + nick + ": " + mess)
@@ -405,9 +416,9 @@ def chatwatch_cb(word, word_eol, userdata):
           
      elif nick == spatcher: #Shiny hat is shiny
           if userdata=="action":
-               print(" * \00304" + modechar + nick + "\00307 " + mess)
+               print(" * \00324\026\00317" + modechar + nick + "\00317\026\00307 " + mess)
           else:
-               print("\00304" + modechar + nick + "\00323: " + mess)
+               print("\00308\026\00317" + modechar + nick + "\00317\026\00323: " + mess)
           return hexchat.EAT_ALL
 
      elif mess[:1]=='#' and len(mess) < 17:
@@ -415,7 +426,8 @@ def chatwatch_cb(word, word_eol, userdata):
           return hexchat.EAT_ALL
 
      elif hexchat.get_info("channel") == alive and MESS.find("IN OPEN") > -1:
-          print("\00308" + modechar + nick + ": \00323" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316IN OPEN\00317\026\00323" + mess[MESS.find("IN OPEN")+7:])
+          print("\00308" + modechar + nick + ": \00323" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316" + mess[MESS.find("IN OPEN"):MESS.find("IN OPEN")+7] + "\00317\026\00323" + mess[MESS.find("IN OPEN")+7:])
+          #print("\00308" + modechar + nick + ": \00320\026" + mess)
           return hexchat.EAT_ALL
 
      elif mess[:1]=='#' and len(mess) < 17:
@@ -424,9 +436,9 @@ def chatwatch_cb(word, word_eol, userdata):
    
      elif nick in gr1 and hexchat.get_info("channel") == "#ratchat": # example custom color rule. All lines on ratchat
           if userdata=="action":
-               print("\00301 * " + modechar + nick + " " + mess)
+               print("\00314 * " + modechar + nick + " " + mess)
           else:
-               print("\00301" + modechar + nick + ": " + mess)
+               print("\00314" + modechar + nick + ": " + mess)
           return hexchat.EAT_ALL
           
      return hexchat.EAT_NONE
@@ -553,8 +565,6 @@ def focus_cb(word, word_eol, userdata):
           #     logfile=open("D:\hexratlog.txt","a")
           #     logfile.write(str(datetime.datetime.now()) + " <FOCUS EVENT> Clipboard did not contain recognized prefix. Skipping \n")
           #     logfile.close()     
-     return hexchat.EAT_NONE
-
 
 
 #RESERVED SPACE
@@ -596,9 +606,9 @@ def spatcher_cb(word, word_eol, userdata):
      
      try:
           if word[1] == "show":
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the current dispatcher is: \00304' + spatcher)       
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the current dispatcher is: \00324\026\00317' + spatcher)       
           elif  word[1] == "set":
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< sets \00304' + word[2] + '\00316 as Dispatcher')
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< sets \00324\026\00317' + word[2] + '\00316 as Dispatcher')
                spatcher = word[2]
           elif word[1] == "clear":
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
