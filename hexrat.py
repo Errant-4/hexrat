@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'v0406.0930'
+__module_version__ = 'v0410.2212'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -98,7 +98,7 @@ def join_cb(word, word_eol, userdata): #Shorten all Join messages
      if word[0] in clients:
           for i in range (10):
                if word[0] == clients[i]:
-                    print("\00327#" + str(i) + " " + word[0] + " joined")
+                    print("\00327#" + str(i) + "\00314 " + word[0] + "\00327 joined")
                     return hexchat.EAT_ALL
      else:
           print("\00319" + word[0] + " joined " + mess[mess.find("@"):])
@@ -128,8 +128,8 @@ def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
                     if reason.upper().find("BANNED"): #Ban notifications are given extra space
                          j = 777
                     if as_client == word[0]:
-                         your = "Your client"
-                    print("\00304\026\00316" + your + " #" + str(i) + "\00317\026\00314 " + word[0] + " \00304\026\00316quit\00317\026\00314 " + reason[:j-len(word[0])-len(your)])
+                         your = "\00304\026\00316Your client "
+                    print( your + "\00304\026\00316#" + str(i) + "\00317\026\00314 " + word[0] + " \00304\026\00316quit\00317\026\00314 " + reason[:j-len(word[0])-len(your)])
                     return hexchat.EAT_ALL
      elif hexchat.get_info("channel") == "#fuelrats":
           print("\00314" + word[0] + " quit " + reason[:j-len(word[0])])
@@ -141,21 +141,27 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
      global clients, as_client, spatcher
      for i in range (10):
           if clients[i] == word[0]:
-               print("\00316>>HEXRAT<< sees client shenanigans")
+               your=""
+               if as_client == word[0]:
+                         your = "\00304\026\00316Your client\00317\026\00312 "
+               
+               print( your + "\00317\026\00312#" + str(i) + " " + word[0] + "\00325 is now known as\00312 #" + str(i) + " "  + word[1])   
+               #print("\00316>>HEXRAT<< sees client shenanigans")
                clients[i] = word[1]
+               return hexchat.EAT_ALL
      if as_client == word[0]:
           print("\00304>>HEXRAT<< thinks that's your client!")
           as_client = word[1]
      
      if word[0].upper().find("SPATCH") > -1 and word[1].upper().find("SPATCH") == -1 and hexchat.get_info("channel") == "#ratchat":
-          print("\00308" + word[1] + " \00324\026\00317 reverts back to \00308"+ word[1])
-          hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
+          print("\00308\026\00317" + word[0] + " \00317\026\00325 reverts back to \00308"+ word[1])
+          #hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
           spatcher = "Stuffy"
           return hexchat.EAT_ALL
      elif word[0].upper().find("SPATCH") == -1 and word[1].upper().find("SPATCH") > -1 and hexchat.get_info("channel") == "#ratchat":
           spatcher = word[1]
           print("\00308" + word[0] + " \00325puts on THE HAT and becomes \00324\026\00317" + spatcher)
-          hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00324\026\00317' + spatcher)
+          #hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00324\026\00317' + spatcher)
           return hexchat.EAT_ALL
      
      return hexchat.EAT_NONE
@@ -249,9 +255,9 @@ def chatwatch_cb(word, word_eol, userdata):
                          distance = distance[distance.find(" ")+1:]
                     if distance[-2:-1] == ".":
                          distance = distance[:-2]
-                    print("\00301System: " + d1 + " | " + str(d2) + " | " + str(d3) + " | Dist " + str(d4) +" | RefDist " + str(d5)) ###################################
                     try:
                          totaldist = int(distance) + distb
+                         #totaldist = (int(distance) + distb)*0.8
                          if totaldist <=300:
                               print("\00315Rough distance: Short (less than " + str(totaldist) + " LY from Jackson's)")
                          elif totaldist <=1000:
@@ -264,14 +270,18 @@ def chatwatch_cb(word, word_eol, userdata):
                          print("\00304Error calculating distance!!")
                else:
                     casclip = casclip + "."
-               
+               if ratmode == "silent":
+                    print("\00304\026\00316Ratmode is set to SILENT")               
                print("\00315Casclip:" + casclip)
 
                if platform.system()=="Windows":
-                    if copymode == "va":
-                         pyperclip.copy(casclip)
-                    elif copymode == "system":
-                         pyperclip.copy(systems[casenum])
+                    try:
+                         if copymode == "va":
+                              pyperclip.copy(casclip)
+                         elif copymode == "system":
+                              pyperclip.copy(systems[casenum])
+                    except:
+                         print("\00316>>HEXRAT<< can't access clipboard!")
                if cr > -1 : # CR
                     if pc > -1 :
                          if ratmode == "dispatch":
@@ -608,7 +618,7 @@ def spatcher_cb(word, word_eol, userdata):
           if word[1] == "show":
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the current dispatcher is: \00324\026\00317' + spatcher)       
           elif  word[1] == "set":
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< sets \00324\026\00317' + word[2] + '\00316 as Dispatcher')
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< sets \00308\026\00317' + word[2] + '\00317\026\00316 as Dispatcher')
                spatcher = word[2]
           elif word[1] == "clear":
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
@@ -789,8 +799,8 @@ def welcome_cb(word, word_eol, userdata):
           if hexchat.get_info("nick")[-10:] != "[DISPATCH]":
                hat_cb("","","")
           if word[1] in clients:
-               hexchat.command("msg " + aliastarget + " " + word[1] +  ': We have received your distress call, welcome to the Fuel Rats. Please let us know once your modules are powered down.')
-               hexchat.command("msg " + aliastarget + ' If at any time during the rescue an "Oxygen depleted" countdown appears on your screen, tell us immediately.')
+               hexchat.command("msg " + aliastarget + " " + word[1] +  ' we have received your distress call, welcome to the Fuel Rats. Please let us know once your non-essential modules are powered down.')
+               hexchat.command("msg " + aliastarget + ' If at any time during the rescue an "Oxygen depleted" countdown appears on your screen, tell me immediately.')
           else:
                hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< /we " + word[1] +"    \00304failed\00316: That's not a client")
      except:
