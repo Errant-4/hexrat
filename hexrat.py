@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'v0414.1539'
+__module_version__ = 'v0414.1823'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -19,7 +19,7 @@ elif platform.system() == "Windows":
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
      logging = False
      
-platforms = "hori"
+ratplatforms = "hori" # In case of old config file without <platforms>
 
 file = open(Path(filepath, "hexrat.conf"),"r")
 config = file.read().splitlines()
@@ -66,13 +66,12 @@ for i in config:
      elif i[:10] == "<copymode>": 
           copymode = i[10:]
      elif i[:11] == "<platforms>": 
-          platforms = i[11:]
+          ratplatforms = i[11:]
                 
 alive = "#fuelrats" # target for calls/reports/facts
 asafe = hexchat.get_info("nick") # target for safe mode messages
 drillbot = "Drillsqueak[BOT]" # For drill/practice <UNTESTED!>
 mecha = "MechaSqueak[BOT]"
-
 
 aliastarget = alive
 spatcher = "Stuffy"
@@ -172,7 +171,7 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
      return hexchat.EAT_NONE
 
 def chatwatch_cb(word, word_eol, userdata):
-     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode, platforms
+     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode, ratplatforms
      nick = hexchat.strip(word[0])
      mess = hexchat.strip(word[1])
      MESS = mess.upper()
@@ -192,18 +191,23 @@ def chatwatch_cb(word, word_eol, userdata):
           hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the Dispatcher is actually not.')
 
      if MESS[:9]=='RATSIGNAL':
-          cr = 0
-          cr = mess.find("(Code Red)")
-          pc = 0
-          pc = mess.find("(PC_SIGNAL)")
-          ody = 0
-          ody = mess.find("(Odyssey)")
-          ps = 0
-          ps = mess.find("(PS_SIGNAL)")
-          xb = 0
-          xb = mess.find("(XB_SIGNAL)")
           
-
+          if mess.find("(Code Red)") > -1:
+               cr = True
+          else:
+               cr = False
+               
+          if mess.find("(Odyssey)") > -1:
+               caseplatform = "ody"
+          elif mess.find("(PC_SIGNAL)") > -1:
+               caseplatform = "hori"
+          elif mess.find("(PS_SIGNAL)") > -1:
+               caseplatform = "ps"
+          elif mess.find("(XB_SIGNAL)") > -1:
+               caseplatform = "xb"
+          else:
+               caseplatform = ""
+               
           if mess.find("#") == 15: # This looks like a legit ratsignal
                
                casenum = int(mess[16:18].strip())
@@ -292,37 +296,37 @@ def chatwatch_cb(word, word_eol, userdata):
                               pyperclip.copy(systems[casenum])
                     except:
                          print("\00316>>HEXRAT<< can't access clipboard!")
-                         
+               
                if ratmode == "silent":
                     pass
                elif ratmode == "rat":
-                    if ody > -1: 
-                         if platforms.find("ody") > -1:
-                              if cr > -1 :
+                    if caseplatform == "ody": 
+                         if ratplatforms.find("ody") > -1:
+                              if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif pc > -1: 
-                         if platforms.find("hori") > -1:
-                              if cr > -1 :
+                    elif caseplatform == "hori": 
+                         if ratplatforms.find("hori") > -1:
+                              if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    if ps > -1: 
-                         if platforms.find("ps") > -1:
-                              if cr > -1 :
+                    elif caseplatform == "ps": 
+                         if ratplatforms.find("ps") > -1:
+                              if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    if xb > -1: 
-                         if platforms.find("xb") > -1:
-                              if cr > -1 :
+                    elif platform == "xb": 
+                         if ratplatforms.find("xb") > -1:
+                              if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
@@ -330,43 +334,12 @@ def chatwatch_cb(word, word_eol, userdata):
                               ssk.play()
                     else:
                          smgs.play()
-                         print("\00316>>HEXRAT<< couldn't sort the ratsignal's platform!")                
+                         print("\00304>>HEXRAT<< couldn't sort the ratsignal's platform!")                
                elif ratmode == "dispatch":
-                    if cr > -1:
+                    if cr == True :
                          scr.play()
                     else:
                          sst.play()
-               
-               """
-               if cr > -1 : # CR
-                    if pc > -1 :
-                         if ratmode == "dispatch":
-                              scr.play()
-                         elif ratmode == "rat":
-                              if ody == -1 :
-                                   scr.play()
-                              elif ody > -1:
-                                   ssk.play()
-                    # console cases     
-                    elif ratmode == "rat":
-                         ssk.play()
-                    elif ratmode == "dispatch":
-                         scr.play()
-               else: # Not CR
-                    if pc > -1 :
-                         if ratmode == "dispatch":
-                              sst.play()
-                         elif ratmode == "rat":
-                              if ody == -1 :
-                                   sst.play()
-                              elif ody > -1:
-                                   ssk.play()
-                    # console cases     
-                    elif ratmode == "rat":
-                         ssk.play()
-                    elif ratmode == "dispatch":
-                         sst.play()
-               """
                
           else: # Case number not found. Manual ratsignal?
                print("\00320" + modechar + nick + ": " + mess)
