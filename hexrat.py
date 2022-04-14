@@ -17,7 +17,7 @@ if platform.system() == "Linux":
      logging = False
 elif platform.system() == "Windows": 
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
-     logging = True
+     logging = False
 
 file = open(Path(filepath, "hexrat.conf"),"r")
 config = file.read().splitlines()
