@@ -14,14 +14,16 @@ It should not throw errors at you anymore, if it does please let me know
 
 4. put hexrat.py in Hexchat/addons   and hexrat will automatically load on hexchat startup
 
-5. Optional: put hexrat-loader.py in Hexchat/addons if you want to be able to refresh/load hexrat with a single command (/hr). You shouldn't need this for normal use
+5. If you are not (only) playing Horizons, set your platform(s) in hexrat.conf
+
+6. Optional: put hexrat-loader.py in Hexchat/addons if you want to be able to refresh/load hexrat with a single command (/hr). You shouldn't need this for normal use
 
 # Known issues: 
 
-it will throw errors if it's left running while the desktop is locked, because it won't be able to reach the clipboard
+~~it will throw errors if it's left running while the desktop is locked, because it won't be able to reach the clipboard~~
 
 When it's cutting Mecha or Quit-messages short, it's set for the exact font and window size I'm using, results may vary
 
 It's tuned for a dark color scheme and will probably be barely eligible on a white background. If you use a dark colorscheme that's not exactly like mine, or if your text events are not exactly like mine, the appearance will not be fully consistent You can use the provided colors.conf and pevents.conf
 
-If you want to use it for console or Ody you will have to change the sound trigger conditions in hexrat.py around lines 260-300, I set them to use ssk (skip)
+~~If you want to use it for console or Ody you will have to change the sound trigger conditions in hexrat.py around lines 260-300, I set them to use ssk (skip)~~
