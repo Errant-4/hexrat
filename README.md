@@ -10,13 +10,11 @@ It should not throw errors at you anymore, if it does please let me know
 
 2. You will need additional Python modules: "pyperclip" and "pygame"
 
-3. ~~Open hexrat.py and change the path and/or names for the sound files you want to use for the designated event types~~ Put hexrat.conf in /Hexchat/ and open it to edit the file names for all listed sound effects to whatever sounds you have/want to use. You can also change where hexrat will look for these files, the default is HexChat/sounds/ folder
+3. Put the sounds in Hexchat/sounds. Put hexrat.conf in /Hexchat/ and edit any settings you want to change (such as your Platform)
 
 4. put hexrat.py in Hexchat/addons   and hexrat will automatically load on hexchat startup
 
-5. If you are not (only) playing Horizons, set your platform(s) in hexrat.conf
-
-6. Optional: put hexrat-loader.py in Hexchat/addons if you want to be able to refresh/load hexrat with a single command (/hr). You shouldn't need this for normal use
+5. Optional: put hexrat-loader.py in Hexchat/addons if you want to be able to refresh/load hexrat with a single command (/hr). You shouldn't need this for normal use
 
 # Known issues: 
 
