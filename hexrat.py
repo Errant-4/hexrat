@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'v0410.2212'
+__module_version__ = 'v0414.1539'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -18,6 +18,8 @@ if platform.system() == "Linux":
 elif platform.system() == "Windows": 
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
      logging = False
+     
+platforms = "hori"
 
 file = open(Path(filepath, "hexrat.conf"),"r")
 config = file.read().splitlines()
@@ -63,11 +65,14 @@ for i in config:
           ratmode = i[9:]
      elif i[:10] == "<copymode>": 
           copymode = i[10:]
+     elif i[:11] == "<platforms>": 
+          platforms = i[11:]
                 
 alive = "#fuelrats" # target for calls/reports/facts
 asafe = hexchat.get_info("nick") # target for safe mode messages
-drillbot = "DrillSqueak[BOT]" # For drill/practice <UNTESTED!>
+drillbot = "Drillsqueak[BOT]" # For drill/practice <UNTESTED!>
 mecha = "MechaSqueak[BOT]"
+
 
 aliastarget = alive
 spatcher = "Stuffy"
@@ -167,7 +172,7 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
      return hexchat.EAT_NONE
 
 def chatwatch_cb(word, word_eol, userdata):
-     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode
+     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode, platforms
      nick = hexchat.strip(word[0])
      mess = hexchat.strip(word[1])
      MESS = mess.upper()
@@ -190,9 +195,14 @@ def chatwatch_cb(word, word_eol, userdata):
           cr = 0
           cr = mess.find("(Code Red)")
           pc = 0
-          pc = mess.find("(PC_SIGNAL")
+          pc = mess.find("(PC_SIGNAL)")
           ody = 0
-          ody = mess.find("(Odyssey")
+          ody = mess.find("(Odyssey)")
+          ps = 0
+          ps = mess.find("(PS_SIGNAL)")
+          xb = 0
+          xb = mess.find("(XB_SIGNAL)")
+          
 
           if mess.find("#") == 15: # This looks like a legit ratsignal
                
@@ -282,6 +292,52 @@ def chatwatch_cb(word, word_eol, userdata):
                               pyperclip.copy(systems[casenum])
                     except:
                          print("\00316>>HEXRAT<< can't access clipboard!")
+                         
+               if ratmode == "silent":
+                    pass
+               elif ratmode == "rat":
+                    if ody > -1: 
+                         if platforms.find("ody") > -1:
+                              if cr > -1 :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    elif pc > -1: 
+                         if platforms.find("hori") > -1:
+                              if cr > -1 :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    if ps > -1: 
+                         if platforms.find("ps") > -1:
+                              if cr > -1 :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    if xb > -1: 
+                         if platforms.find("xb") > -1:
+                              if cr > -1 :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    else:
+                         smgs.play()
+                         print("\00316>>HEXRAT<< couldn't sort the ratsignal's platform!")                
+               elif ratmode == "dispatch":
+                    if cr > -1:
+                         scr.play()
+                    else:
+                         sst.play()
+               
+               """
                if cr > -1 : # CR
                     if pc > -1 :
                          if ratmode == "dispatch":
@@ -310,6 +366,7 @@ def chatwatch_cb(word, word_eol, userdata):
                          ssk.play()
                     elif ratmode == "dispatch":
                          sst.play()
+               """
                
           else: # Case number not found. Manual ratsignal?
                print("\00320" + modechar + nick + ": " + mess)
@@ -761,7 +818,7 @@ def hat_cb(word, word_eol, userdata):
 def open_cb(word, word_eol, userdata):
      if hexchat.get_info("channel") == "#ratchat":
           hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< watches your every move. Type /hexhelp if this scares you")
- 
+          hexchat.command("msg MechaSqueak[BOT] !list")
 def justprep_cb(word,word_eol,userdata):
      global clients, aliastarget, asafe
      case = 999
@@ -835,7 +892,7 @@ def hexhelp_cb(word, word_eol, userdata):
      hexchat.find_context(channel="#ratchat").prnt('\00316 /th <nick>" Displays "Thx/bye" to #fuelrats"')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /hr    If hexrat-loader is running, launch/reload hexrat')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch show    Show the currently tracked dispatcer')
-     hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch set    Manually set a dispatcher. (This will be automatically overwritten if a different dispatcher candidate is detected')
+     hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch set    Manually set a dispatcher. (Might be automatically overwritten')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch clear    Unsets current dispatcher')
      hexchat.find_context(channel="#ratchat").prnt("")
 
