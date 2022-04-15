@@ -324,7 +324,7 @@ def chatwatch_cb(word, word_eol, userdata):
                                    sst.play()
                          else:
                               ssk.play()
-                    elif platform == "xb": 
+                    elif caseplatform == "xb": 
                          if ratplatforms.find("xb") > -1:
                               if cr == True :
                                    scr.play()
