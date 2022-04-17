@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'B1 (0330.1548)'
+__module_version__ = 'v0414.1823'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -8,46 +8,73 @@ import platform
 import datetime
 import time
 from pygame import mixer
+from pathlib import Path
 
 mixer.init()
 
-soundpath=""
-if platform.system()=="Linux":
-     soundpath = "/media/camo_d/HexChat/sounds/"
+if platform.system() == "Linux":
+     filepath = Path(Path.home(), ".config/hexchat")
      logging = False
-elif platform.system()=="Windows": 
-     soundpath = "D:\\HexChat\\sounds\\" # Use double \\-s!
-     logging = True
+elif platform.system() == "Windows": 
+     filepath = Path(Path.home(), "AppData/Roaming/HexChat")
+     logging = False
+     
+ratplatforms = "hori" # In case of old config file without <platforms>
 
-# Editable parameters ---------------------------------------------------------------------------------------------------------------------------------
-alive = "#fuelrats" # target for messages
+file = open(Path(filepath, "hexrat.conf"),"r")
+config = file.read().splitlines()
+file.close
+for i in config:
+     if i[:17] == "<soundpath_linux>": 
+          if platform.system() == "Linux":
+               if i.find("$HOME/") > -1:
+                    j = i.find("$HOME/")
+                    soundpath = Path(Path.home(),i[j+6:])
+                    soundpath = str(soundpath) + "/"
+               else:
+                    soundpath = i[17:]
+               soundpath = str(soundpath)
+     elif i[:19] == "<soundpath_windows>": 
+          if platform.system() == "Windows":
+               if i.find("$HOME\\") > -1:
+                    j = i.find("$HOME\\")
+                    soundpath = Path(Path.home(),i[j+6:])
+                    soundpath = str(soundpath) + "\\"
+               else:
+                    soundpath = i[19:]
+               soundpath = str(soundpath)
+     elif i[:15] == "<sound_codered>":         
+          scr = mixer.Sound(soundpath + i[15:])
+     elif i[:16] == "<sound_standard>": 
+          sst = mixer.Sound(soundpath + i[16:])
+     elif i[:12] == "<sound_skip>":
+          ssk = mixer.Sound(soundpath + i[12:])
+     elif i[:14] == "<sound_hatsig>":
+          stas = mixer.Sound(soundpath + i[14:])
+     elif i[:13] == "<sound_alert>": 
+          smgs = mixer.Sound(soundpath + i[13:])
+     elif i[:12] == "<sound_prep>": 
+          sring = mixer.Sound(soundpath + i[12:])
+     elif i[:14] == "<sound_squeak>": 
+          srat = mixer.Sound(soundpath + i[14:])
+     elif i[:13] == "<sound_start>": 
+          sbar = mixer.Sound(soundpath + i[13:])
+     elif i[:13] == "<sound_cheer>": 
+          schr = mixer.Sound(soundpath + i[13:])
+     elif i[:9] == "<ratmode>": 
+          ratmode = i[9:]
+     elif i[:10] == "<copymode>": 
+          copymode = i[10:]
+     elif i[:11] == "<platforms>": 
+          ratplatforms = i[11:]
+                
+alive = "#fuelrats" # target for calls/reports/facts
 asafe = hexchat.get_info("nick") # target for safe mode messages
-drillbot = "DrillSqueak[BOT]"
-mecha = "MechaSqueak[BOT]" # MechaSqueak[BOT] for live
+drillbot = "Drillsqueak[BOT]" # For drill/practice <UNTESTED!>
+mecha = "MechaSqueak[BOT]"
 
-scr = mixer.Sound(soundpath + "code_red.wav") #sound for code red cases
-sst = mixer.Sound(soundpath + "Iroquois_1.wav") #sound for standard cases
-ssk = mixer.Sound(soundpath + "xp_shutdown.mp3") #sound for ignored cases
-stas = mixer.Sound(soundpath + "tasukete.wav") #sound for hatsignals
-smgs = mixer.Sound(soundpath + "mgs_alert.mp3") #sound for manual ratsignals
-srat = mixer.Sound(soundpath + "rat2.wav") #sound for jump calls/standdowns
-sring = mixer.Sound(soundpath + "sonic_ring.wav") #sound for !prep
-sbar = mixer.Sound(soundpath + "checkout.wav") #sound for startup
-
-
-aliastarget = alive  #Alias texts will be sent to this target. Can be switched with /safe and /arm
+aliastarget = alive
 spatcher = "Stuffy"
-
-"""  Format cheatsheet
-Bold: ‘\002’
-Color: ‘\003’
-Hidden: ‘\010’
-Underline: ‘\037’
-Original Color: ‘\017’
-Reverse Color: ‘\026’
-Beep: ‘\007’
-Italics: ‘\035’ (currently does nothing)
-"""
 
 hexback = False
 clients = ["","","","","","","","","","",]
@@ -55,18 +82,14 @@ systems = ["","","","","","","","","","",]
 as_casenum = "NO CASE ASSIGNED GO AWAY"
 as_client = "NO CASE ASSIGNED GO AWAY"
 
-ratmode = "rat" # Sound profiles can be changed with /ratmode <rat/dispatch/silent>
-
-
-
-"""  TO DO:
-
-- VA .pull does not work?
--check everything for 2-digit case compatibility
--color and formatting settings via variables?
--cnick? (A nick variable that is colored indepentendtly of elif branch)
-
-"""
+try:
+     file = open(Path(filepath, "gr1.conf"),"r")
+     gr1 = file.read().splitlines()
+     file.close 
+except: 
+     #smgs.play()
+     #hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< failed to load highlight rule "gr1"')
+     gr1="not this time ratto"
 
 def mode_cb(word, word_eol, userdata): #Hide mode changes in #fuelrats 
      mess = word[1]
@@ -79,13 +102,14 @@ def join_cb(word, word_eol, userdata): #Shorten all Join messages
      if word[0] in clients:
           for i in range (10):
                if word[0] == clients[i]:
-                    print("\00327#" + str(i) + " " + word[0] + " joined")
+                    print("\00327#" + str(i) + "\00314 " + word[0] + "\00327 joined")
                     return hexchat.EAT_ALL
      else:
           print("\00319" + word[0] + " joined " + mess[mess.find("@"):])
      return hexchat.EAT_ALL
           
 def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
+     global as_client
      mess = hexchat.strip(word[2])
      stock = ["FuelRats Web IRC - Provided by KiwiIRC","Connection closed","Going offline, see ya! (www.adiirc.com)","Leaving"]
      reason = ""
@@ -98,14 +122,21 @@ def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
                reason = word[1]
      if reason[:6] == "Quit: ":
           reason = reason[6:]
-          
+     j = 51
      if word[0] in clients:
           for i in range (10):
+               
                if word[0] == clients[i]:
-                    print("\00304#" + str(i) + " " + word[0] + " quit \00323" + reason[:51-len(word[0])])
+                    your = ""
+
+                    if reason.upper().find("BANNED"): #Ban notifications are given extra space
+                         j = 777
+                    if as_client == word[0]:
+                         your = "\00304\026\00316Your client "
+                    print( your + "\00304\026\00316#" + str(i) + "\00317\026\00314 " + word[0] + " \00304\026\00316quit\00317\026\00314 " + reason[:j-len(word[0])-len(your)])
                     return hexchat.EAT_ALL
      elif hexchat.get_info("channel") == "#fuelrats":
-          print("\00314" + word[0] + " quit " + reason[:51-len(word[0])])
+          print("\00314" + word[0] + " quit " + reason[:j-len(word[0])])
           return hexchat.EAT_ALL
      else:
           return hexchat.EAT_NONE
@@ -114,32 +145,38 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
      global clients, as_client, spatcher
      for i in range (10):
           if clients[i] == word[0]:
-               print("\00316>>HEXRAT<< sees client shenanigans")
+               your=""
+               if as_client == word[0]:
+                         your = "\00304\026\00316Your client\00317\026\00312 "
+               
+               print( your + "\00317\026\00312#" + str(i) + " " + word[0] + "\00325 is now known as\00312 #" + str(i) + " "  + word[1])   
+               #print("\00316>>HEXRAT<< sees client shenanigans")
                clients[i] = word[1]
+               return hexchat.EAT_ALL
      if as_client == word[0]:
           print("\00304>>HEXRAT<< thinks that's your client!")
           as_client = word[1]
      
      if word[0].upper().find("SPATCH") > -1 and word[1].upper().find("SPATCH") == -1 and hexchat.get_info("channel") == "#ratchat":
-          print("\00308" + word[1] + " \00325 reverts back to \00308"+ word[1])
-          hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
+          print("\00308\026\00317" + word[0] + " \00317\026\00325 reverts back to \00308"+ word[1])
+          #hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
           spatcher = "Stuffy"
           return hexchat.EAT_ALL
      elif word[0].upper().find("SPATCH") == -1 and word[1].upper().find("SPATCH") > -1 and hexchat.get_info("channel") == "#ratchat":
           spatcher = word[1]
-          print("\00308" + word[0] + " \00325puts on THE HAT and becomes \00320" + spatcher)
-          hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00304' + spatcher)
+          print("\00308" + word[0] + " \00325puts on THE HAT and becomes \00324\026\00317" + spatcher)
+          #hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00324\026\00317' + spatcher)
           return hexchat.EAT_ALL
      
      return hexchat.EAT_NONE
 
 def chatwatch_cb(word, word_eol, userdata):
-     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher
+     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode, ratplatforms
      nick = hexchat.strip(word[0])
      mess = hexchat.strip(word[1])
      MESS = mess.upper()
      diff = ""
-    
+     
      try:
           modechar = word[2]
      except:
@@ -147,20 +184,30 @@ def chatwatch_cb(word, word_eol, userdata):
 
      if hexchat.get_info("channel") == alive and ((mess[:1] == "!" and MESS[:4] != "!KGB") or MESS.find("WELCOME TO") > -1):
           if spatcher != nick:
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00304' + nick)
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< identified a Dispatcher: \00324\026\00317' + nick)
           spatcher = nick
      if hexchat.get_info("channel") == "#ratchat" and nick == spatcher and MESS.find("JUST PREP") > -1:
           spatcher = "Stuffy"
           hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the Dispatcher is actually not.')
 
      if MESS[:9]=='RATSIGNAL':
-          cr = 0
-          cr = mess.find("(Code Red)")
-          pc = 0
-          pc = mess.find("(PC_SIGNAL")
-          ody = 0
-          ody = mess.find("(Odyssey")
-
+          
+          if mess.find("(Code Red)") > -1:
+               cr = True
+          else:
+               cr = False
+               
+          if mess.find("(Odyssey)") > -1:
+               caseplatform = "ody"
+          elif mess.find("(PC_SIGNAL)") > -1:
+               caseplatform = "hori"
+          elif mess.find("(PS_SIGNAL)") > -1:
+               caseplatform = "ps"
+          elif mess.find("(XB_SIGNAL)") > -1:
+               caseplatform = "xb"
+          else:
+               caseplatform = ""
+               
           if mess.find("#") == 15: # This looks like a legit ratsignal
                
                casenum = int(mess[16:18].strip())
@@ -185,53 +232,122 @@ def chatwatch_cb(word, word_eol, userdata):
                     j = mess[i:].find("(") -1
                     clients[casenum] = mess[i:i+j]
                     diff = "\00316 Nick!=CMDR"
-                   
+   
                casclip = "#" + str(casenum) + ":" + clients[casenum] + ":" + systems[casenum]
 
                if mess.find('" (Unconfirmed ') > -1 or mess.find('Invalid system name') > -1 or mess.find("Pilots' Federation District Permit Required") > -1:
                     print("\00316Probably unroutable system!")
                     casclip = casclip + "."
 
+               sysrefcheck = ["","Sol","Maia","Rodentia","Fuelum"]
+               sysref = ""
+               if mess.find(" LY from ") > -1:
+                    i = mess.find(" LY from ") + 9
+                    j = mess[i:].find(")")
+                    sysref = mess[i:i+j]
+                    
+               if sysref not in sysrefcheck:
+                    if ratmode != "silent":
+                         smgs.play()
+                    print("\00304 Unlisted reference point! \00315"+ sysref)
+               else:
+                    if sysref == "Sol":
+                         distb = 174
+                    elif sysref == "Fuelum":
+                         distb = 161
+                    elif sysref == "Maia":
+                         distb = 383
+                    elif sysref == "Rodentia":
+                         distb = 22112
+
+               distance = "999"
+                      
+               if mess.find(" LY from ") > -1:
+                    i = mess.find(" LY from ")
+                    distance = mess[i-7:i]
+                    if distance.find(" ") > -1:
+                         distance = distance[distance.find(" ")+1:]
+                    if distance[-2:-1] == ".":
+                         distance = distance[:-2]
+                    try:
+                         totaldist = int(distance) + distb
+                         #totaldist = (int(distance) + distb)*0.8
+                         if totaldist <=300:
+                              print("\00315Rough distance: Short (less than " + str(totaldist) + " LY from Jackson's)")
+                         elif totaldist <=1000:
+                              print("\00315Rough distance: Med (less than " + str(totaldist) + " LY from Jackson's)")
+                         elif totaldist > 1000:
+                              print("\00315Rough distance: LRR (~ " + str(totaldist) + " LY from Jackson's)")
+                    except:
+                         if ratmode != "silent":
+                              smgs.play()
+                         print("\00304Error calculating distance!!")
+               else:
+                    casclip = casclip + "."
+               if ratmode == "silent":
+                    print("\00304\026\00316Ratmode is set to SILENT")               
                print("\00315Casclip:" + casclip)
-               
+
                if platform.system()=="Windows":
-                    pyperclip.copy(casclip)
+                    try:
+                         if copymode == "va":
+                              pyperclip.copy(casclip)
+                         elif copymode == "system":
+                              pyperclip.copy(systems[casenum])
+                    except:
+                         print("\00316>>HEXRAT<< can't access clipboard!")
+               
+               if ratmode == "silent":
                     pass
-               if cr > -1 : # CR
-                    if pc > -1 :
-                         if ratmode == "dispatch":
-                              scr.play()
-                         elif ratmode == "rat":
-                              if ody == -1 :
+               elif ratmode == "rat":
+                    if caseplatform == "ody": 
+                         if ratplatforms.find("ody") > -1:
+                              if cr == True :
                                    scr.play()
-                              elif ody > -1:
-                                   ssk.play()
-                    # console cases     
-                    elif ratmode == "rat":
-                         ssk.play()
-                    elif ratmode == "dispatch":
-                         scr.play()
-               else: # Not CR
-                    if pc > -1 :
-                         if ratmode == "dispatch":
-                              sst.play()
-                         elif ratmode == "rat":
-                              if ody == -1 :
+                              else:
                                    sst.play()
-                              elif ody > -1:
-                                   ssk.play()
-                    # console cases     
-                    elif ratmode == "rat":
-                         ssk.play()
-                    elif ratmode == "dispatch":
+                         else:
+                              ssk.play()
+                    elif caseplatform == "hori": 
+                         if ratplatforms.find("hori") > -1:
+                              if cr == True :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    elif caseplatform == "ps": 
+                         if ratplatforms.find("ps") > -1:
+                              if cr == True :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    elif caseplatform == "xb": 
+                         if ratplatforms.find("xb") > -1:
+                              if cr == True :
+                                   scr.play()
+                              else:
+                                   sst.play()
+                         else:
+                              ssk.play()
+                    else:
+                         smgs.play()
+                         print("\00304>>HEXRAT<< couldn't sort the ratsignal's platform!")                
+               elif ratmode == "dispatch":
+                    if cr == True :
+                         scr.play()
+                    else:
                          sst.play()
                
           else: # Case number not found. Manual ratsignal?
                print("\00320" + modechar + nick + ": " + mess)
+               return hexchat.EAT_ALL
                smgs.play()
 
      # Message was not a Ratsignal
-
+     
      elif (nick == mecha or nick == drillbot) and mess[:26] == 'Successfully closed case #': # case closed
           i = int(mess[26:28].strip())
 
@@ -244,10 +360,9 @@ def chatwatch_cb(word, word_eol, userdata):
           clients[i] = ""
           systems[i] = ""
           
-          if clients[0] + clients[1] +clients[2] +clients[3] +clients[4] +clients[5] +clients[6] +clients[7] +clients[8] +clients[9] == "":
+          if clients[0] + clients[1] +clients[2] +clients[3] +clients[4] +clients[5] +clients[6] +clients[7] +clients[8] +clients[9] == "" and spatcher[-7:].upper() != "SPATCH]":
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< cleared all cases. Dispatcher vaporized.')
                spatcher = "Stuffy"
-          
           return hexchat.EAT_ALL
 
      elif (nick == mecha or nick == drillbot) and mess[:25] == 'Successfully added case #': # case closed
@@ -266,8 +381,10 @@ def chatwatch_cb(word, word_eol, userdata):
      elif mess[-15:] == ') has rejoined!': # client rejoined
           return hexchat.EAT_ALL  
         
-     elif (nick == mecha and hexchat.get_info("channel") == "#fuelrats") or nick == drillbot :# make (probably) unimportant lines shorter and less visible
-          if len(mess)>102:
+     elif (nick == mecha and hexchat.get_info("channel") == "#fuelrats" and mess[:9] != "CAUTION: ") or nick == drillbot :# make (probably) unimportant lines shorter and less visible
+          if mess[:9] == "CAUTION: ":
+               return hexchat.EAT_NONE
+          elif len(mess)>102:
                print("\00321" + nick + ": " + mess[:99] + "...")
                if logging==True:
                     logfile=open("D:\hexratlog.txt","a")
@@ -290,24 +407,27 @@ def chatwatch_cb(word, word_eol, userdata):
           if nick == spatcher:
                spatcher = "Stuffy"
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the Dispatcher is actually not.')
-          srat.play()
+          if ratmode != "silent":
+               srat.play()
           return hexchat.EAT_ALL
           
      elif mess[:5]=='!prep' : #Starting Gun for prep
-          sring.play()
+          if ratmode != "silent":
+               sring.play()
           print("\00327" + modechar + nick + "\00327: " + mess)
           return hexchat.EAT_ALL
 
      elif mess.find('#') and (MESS.find("STDN") > -1 or MESS.find("STNDN")> -1): #highlight standdowns
           print("\00308" + modechar + nick + ": \00320" + mess)
-          srat.play()
+          if ratmode != "silent":
+               srat.play()
           return hexchat.EAT_ALL
 
      elif (nick == as_client): #Highlight the tracked client
           if userdata=="action":
-               print(" * \00303" + nick + " " + mess)
+               print(" * \00303\026#" + as_casenum + " " + nick + "\00317\026\00303 " + mess)
           else:      
-               print("\00303" + nick + ": " + mess)
+               print("\00303\026#" + as_casenum + " " + nick + ":\00317\026\00303 " + mess)
           return hexchat.EAT_ALL
           
      elif nick in clients: # tag non-tracked clients with case number
@@ -327,7 +447,8 @@ def chatwatch_cb(word, word_eol, userdata):
      #          return hexchat.EAT_ALL
                      
      elif MESS.find("HATSIGNAL") > -1: #Hat rats gotta look out for each other
-          stas.play()
+          if ratmode != "silent":
+               stas.play()
         
      elif nick == "RatMama[BOT]" and mess[:30] == "[Paperwork] Paperwork for case": #honestly, who wants to see paperwork?
           print("\00321" + nick + ": " + mess)
@@ -335,9 +456,9 @@ def chatwatch_cb(word, word_eol, userdata):
           
      elif nick == spatcher: #Shiny hat is shiny
           if userdata=="action":
-               print(" * \00304" + modechar + nick + "\00307 " + mess)
+               print(" * \00324\026\00317" + modechar + nick + "\00317\026\00307 " + mess)
           else:
-               print("\00304" + modechar + nick + "\00323: " + mess)
+               print("\00308\026\00317" + modechar + nick + "\00317\026\00323: " + mess)
           return hexchat.EAT_ALL
 
      elif mess[:1]=='#' and len(mess) < 17:
@@ -345,25 +466,20 @@ def chatwatch_cb(word, word_eol, userdata):
           return hexchat.EAT_ALL
 
      elif hexchat.get_info("channel") == alive and MESS.find("IN OPEN") > -1:
-          print("\00308" + modechar + nick + ": \00320\026" + mess)
+          print("\00308" + modechar + nick + ": \00323" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316" + mess[MESS.find("IN OPEN"):MESS.find("IN OPEN")+7] + "\00317\026\00323" + mess[MESS.find("IN OPEN")+7:])
+          #print("\00308" + modechar + nick + ": \00320\026" + mess)
           return hexchat.EAT_ALL
 
      elif mess[:1]=='#' and len(mess) < 17:
           print("\00308" + modechar + nick + ": \00322" + mess)
           return hexchat.EAT_ALL
-     """   
-     elif nick in group0:
-          print("\00321" + modechar + nick + ": " + mess)
+   
+     elif nick in gr1 and hexchat.get_info("channel") == "#ratchat": # example custom color rule. All lines on ratchat
           if userdata=="action":
-               print(" * \00321" + modechar + nick + " " + mess)
+               print("\00314 * " + modechar + nick + " " + mess)
           else:
-               print("\00321" + modechar + nick + ": " + mess)
+               print("\00314" + modechar + nick + ": " + mess)
           return hexchat.EAT_ALL
-     """
-     #elif MESS.find("FYNN") > 0: # That's me!
-     
-     #     print("\00329" + modechar + nick + " " + mess)
-     #     return hexchat.EAT_ALL          
           
      return hexchat.EAT_NONE
 
@@ -373,7 +489,7 @@ def private_cb(word, word_eol, userdata): # Display all private messages in the 
      return hexchat.EAT_NONE   
           
 def pull_cb(word, word_eol, userdata):
-     global clients, systems, as_client, as_casenum, hexback
+     global clients, systems, as_client, as_casenum, hexback, copymode
      hexback = False
      try: 
           if int(word[1]) in range(10) and clients[int(word[1])]!="" and systems[int(word[1])] !="":
@@ -381,10 +497,14 @@ def pull_cb(word, word_eol, userdata):
                as_casenum=word[1]
                casclip = "#" + as_casenum + ":" + clients[int(as_casenum)] + ":" + systems[int(as_casenum)]
                if platform.system()=="Windows":
-                    pyperclip.copy(casclip)
-                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< prepares " + casclip)
-                    hexback = True
-                    return     
+                    if copymode == "va":
+                         pyperclip.copy(casclip)
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< prepares " + casclip)
+                         hexback = True
+                         return
+                    elif copymode == "system":
+                         pyperclip.copy(systems[int(as_casenum)])
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< copies system for " + casclip)                       
           elif int(word[1]) in range(10) and clients[int(word[1])]=="" :
                hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< can't pull #" + word[1] + " - no name")              
           elif int(word[1]) in range(10) and systems[int(word[1])] !="":
@@ -485,8 +605,6 @@ def focus_cb(word, word_eol, userdata):
           #     logfile=open("D:\hexratlog.txt","a")
           #     logfile.write(str(datetime.datetime.now()) + " <FOCUS EVENT> Clipboard did not contain recognized prefix. Skipping \n")
           #     logfile.close()     
-     return hexchat.EAT_NONE
-
 
 
 #RESERVED SPACE
@@ -528,10 +646,10 @@ def spatcher_cb(word, word_eol, userdata):
      
      try:
           if word[1] == "show":
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the current dispatcher is: \00304' + spatcher)       
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the current dispatcher is: \00324\026\00317' + spatcher)       
           elif  word[1] == "set":
-               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< sets \00304' + word[2] + '\00316 as Dispatcher')
-               spatcher = "Stuffy"
+               hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< sets \00308\026\00317' + word[2] + '\00317\026\00316 as Dispatcher')
+               spatcher = word[2]
           elif word[1] == "clear":
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< clears the Dispatcher')
                spatcher = "Stuffy"
@@ -546,76 +664,79 @@ def clear_cb(word, word_eol, userdata):
      global as_casenum, as_client
      as_casenum = "NO CASE ASSIGNED GO AWAY"
      as_client = "NO CASE ASSIGNED GO AWAY"
+     if platform.system()=="Windows":
+                    pyperclip.copy(" ")
      hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared your tracked case")
      return hexchat.EAT_ALL
 
 def board_cb(word, word_eol, userdata):
      global clients, systems, as_casenum, as_client
      
-     j = 0
-     for i in range (10):
-          if len(clients[i]) > 0:
-               j = len(clients[i])        
-     if j > 0 :
-          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< is aware of the following cases:")
+     try:
+        a = word[1]
+     except:
+        print("Error! /board must be given a parameter: show, set or clear")
+        return hexchat.EAT_NONE  
+
+     if word[1] == "show":
+          j = 0
           for i in range (10):
-               if clients[i] == as_client:
-                    try:
-                         hexchat.find_context(channel="#ratchat").prnt("\00316\026 #" + str(i) + "  " + clients[i][:11] + "                   "[len(clients[i]):] + systems[i] )
-                    except:
-                         hexchat.find_context(channel="#ratchat").prnt("\00316\026 #" + str(i) + "  " + clients[i][:11])
-               elif clients[i] != "":
-                    try:
-                         hexchat.find_context(channel="#ratchat").prnt("\00316 #" + str(i) + "  " + clients[i][:11] + "                   "[len(clients[i]):] + systems[i] )
-                    except:
-                         hexchat.find_context(channel="#ratchat").prnt("\00316 #" + str(i) + "  " + clients[i][:11])
-     elif as_casenum != "NO CASE ASSIGNED GO AWAY":
-          try:
-               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< is manually tracking: #" + as_casenum + " " + as_client)
-          except:
+               if len(clients[i]) > 0:
+                    j = len(clients[i])       
+          if j > 0 :
+               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< is aware of the following cases:")
+               for i in range (10):
+                    if clients[i] == as_client:
+                         try:
+                              hexchat.find_context(channel="#ratchat").prnt("\00316\026 #" + str(i) + "  " + clients[i][:11] + "                   "[len(clients[i]):] + systems[i] )
+                         except:
+                              hexchat.find_context(channel="#ratchat").prnt("\00316\026 #" + str(i) + "  " + clients[i][:11])
+                    elif clients[i] != "":
+                         try:
+                              hexchat.find_context(channel="#ratchat").prnt("\00316 #" + str(i) + "  " + clients[i][:11] + "                   "[len(clients[i]):] + systems[i] )
+                         except:
+                              hexchat.find_context(channel="#ratchat").prnt("\00316 #" + str(i) + "  " + clients[i][:11])
+          elif as_casenum != "NO CASE ASSIGNED GO AWAY":
+               print("branch 2")
                try:
-                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< manually tracking \00316\026#" + as_casenum)
+                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< is manually tracking\00316\026 #" + as_casenum + " " + as_client + " ")
                except:
-                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< Failed executing /board")
-                    
-     else:
-          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< has nothing for you, the board is clear")
-
-     return hexchat.EAT_ALL
-
-
-
-def boardset_cb(word, word_eol, userdata):
-     global clients, systems
-     
-     try:
-          systems[int(word[1])] = word[3]
-     except:
-          pass
-     try:
-          clients[int(word[1])] = word[2]
-          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< sets client " + word[1] + " as "+word[2])
-     except:
-          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< says no. Try /board_set <number> <clientname>")      
-     return hexchat.EAT_ALL
-
-def boardclear_cb(word, word_eol, userdata):
-     global clients, systems
-     try:
-          if word[1] == "all":
-               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< starts to wipe the board")
-               for i in range(10):
-                    if clients[i] != "":
-                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared #" + str(i))
-                         clients[i] = ""
-                         systems[i] = ""
+                    try:
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< manually tracking\00316\026 #" + as_casenum + " ")
+                    except:
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< Failed executing /board")
           else:
-                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared #"+word[1])
-                    clients[int(word[1])] = ""
-                    systems[int(word[1])] = ""
-     except:
-          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< couldn't clear the board")      
-     return hexchat.EAT_ALL
+               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< Nothing on the board")
+     elif word[1] == "set":
+          try:
+               systems[int(word[2])] = word_eol[4]
+          except:
+               pass
+          try:
+               clients[int(word[2])] = word[3]
+               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< sets client " + word[2] + " as "+word[3])
+          except:
+               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< says no. Try /board_set <number> <clientname>")      
+          return hexchat.EAT_ALL
+     elif word[1] == "clear":
+          try:
+               if word[2] == "all":
+                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< starts to wipe the board")
+                    for i in range(10):
+                         if clients[i] != "":
+                              hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared #" + str(i))
+                              clients[i] = ""
+                              systems[i] = ""
+               else:
+                         hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared #"+word[1])
+                         clients[int(word[2])] = ""
+                         systems[int(word[2])] = ""
+          except:
+               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< couldn't clear the board")      
+          return hexchat.EAT_ALL
+     else:
+          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< can't understand" + word_eol[0])
+          pass
      
 def safe_cb(word, word_eol, userdata):
      global aliastarget, asafe
@@ -670,7 +791,7 @@ def hat_cb(word, word_eol, userdata):
 def open_cb(word, word_eol, userdata):
      if hexchat.get_info("channel") == "#ratchat":
           hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< watches your every move. Type /hexhelp if this scares you")
- 
+          hexchat.command("msg MechaSqueak[BOT] !list")
 def justprep_cb(word,word_eol,userdata):
      global clients, aliastarget, asafe
      case = 999
@@ -708,8 +829,8 @@ def welcome_cb(word, word_eol, userdata):
           if hexchat.get_info("nick")[-10:] != "[DISPATCH]":
                hat_cb("","","")
           if word[1] in clients:
-               hexchat.command("msg " + aliastarget + " " + word[1] +  ': We have received your distress call, welcome to the Fuel Rats. Please let us know once your modules are powered down.')
-               hexchat.command("msg " + aliastarget + ' If at any time during the rescue an "Oxygen depleted" countdown appears on your screen, tell us immediately.')
+               hexchat.command("msg " + aliastarget + " " + word[1] +  ' we have received your distress call, welcome to the Fuel Rats. Please let us know once your non-essential modules are powered down.')
+               hexchat.command("msg " + aliastarget + ' If at any time during the rescue an "Oxygen depleted" countdown appears on your screen, tell me immediately.')
           else:
                hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< /we " + word[1] +"    \00304failed\00316: That's not a client")
      except:
@@ -736,22 +857,16 @@ def hexhelp_cb(word, word_eol, userdata):
      hexchat.find_context(channel="#ratchat").prnt("\00316 /board   (list currently active cases)")
      hexchat.find_context(channel="#ratchat").prnt("\00316 /board_set <number> <nick> <system>")
      hexchat.find_context(channel="#ratchat").prnt('\00316 /board_clear <case>  OR "all"')
-     hexchat.find_context(channel="#ratchat").prnt('\00316 /pull <case>  sends case to clipboard fo VA')
-     
+     hexchat.find_context(channel="#ratchat").prnt('\00316 /pull <case>  sends case to clipboard')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /safe   for testing')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /arm     return to live mode')
-
-     #hexchat.find_context(channel="#ratchat").prnt('\00316 /jp <case> <jumps>     \00304FORBIDDEN BARRAGE!\00316 Be reasonable with this.')
-
+     hexchat.find_context(channel="#ratchat").prnt('\00316 /jp <case> <jumps>     \00304FORBIDDEN BARRAGE!\00316 Use powers responsibly.')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /we <nick>" Displays "Welcome" to #fuelrats" and puts on THE HAT')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /th <nick>" Displays "Thx/bye" to #fuelrats"')
-
      hexchat.find_context(channel="#ratchat").prnt('\00316 /hr    If hexrat-loader is running, launch/reload hexrat')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch show    Show the currently tracked dispatcer')
-     hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch set    Manually set a dispatcher. (This will be automatically overwritten if a different dispatcher candidate is detected')
+     hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch set    Manually set a dispatcher. (Might be automatically overwritten')
      hexchat.find_context(channel="#ratchat").prnt('\00316 /spatch clear    Unsets current dispatcher')
-
-
      hexchat.find_context(channel="#ratchat").prnt("")
 
 hexchat.hook_print("Private Message", private_cb)
@@ -780,10 +895,8 @@ hexchat.hook_command("clear", clear_cb)
 hexchat.hook_command("cc", clear_cb)
 hexchat.hook_command("we", welcome_cb)
 hexchat.hook_command("th", th_cb)
-hexchat.hook_command("board", board_cb)
 hexchat.hook_command("hexhelp", hexhelp_cb)
-hexchat.hook_command("board_set", boardset_cb)
-hexchat.hook_command("board_clear", boardclear_cb)
+hexchat.hook_command("board", board_cb)
 hexchat.hook_command("pull", pull_cb)
 hexchat.hook_command("justprep", justprep_cb)
 hexchat.hook_command("jp", justprep_cb)
