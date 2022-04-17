@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'v0414.1823'
+__module_version__ = 'B2 (v0414.1823)'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -19,7 +19,7 @@ elif platform.system() == "Windows":
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
      logging = False
      
-ratplatforms = "hori" # In case of old config file without <platforms>
+ratplatforms = "PC" # In case of old config file without <platforms>
 
 file = open(Path(filepath, "hexrat.conf"),"r")
 config = file.read().splitlines()
@@ -198,13 +198,13 @@ def chatwatch_cb(word, word_eol, userdata):
                cr = False
                
           if mess.find("(Odyssey)") > -1:
-               caseplatform = "ody"
+               caseplatform = "PC-O"
           elif mess.find("(PC_SIGNAL)") > -1:
-               caseplatform = "hori"
+               caseplatform = "PC"
           elif mess.find("(PS_SIGNAL)") > -1:
-               caseplatform = "ps"
+               caseplatform = "PS"
           elif mess.find("(XB_SIGNAL)") > -1:
-               caseplatform = "xb"
+               caseplatform = "XB"
           else:
                caseplatform = ""
                
@@ -300,32 +300,32 @@ def chatwatch_cb(word, word_eol, userdata):
                if ratmode == "silent":
                     pass
                elif ratmode == "rat":
-                    if caseplatform == "ody": 
-                         if ratplatforms.find("ody") > -1:
+                    if caseplatform == "PC-O": 
+                         if ratplatforms.find("PC-O") > -1:
                               if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif caseplatform == "hori": 
-                         if ratplatforms.find("hori") > -1:
+                    elif caseplatform == "PC": 
+                         if ratplatforms.find("PC") > -1:
                               if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif caseplatform == "ps": 
-                         if ratplatforms.find("ps") > -1:
+                    elif caseplatform == "PS": 
+                         if ratplatforms.find("PS") > -1:
                               if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif caseplatform == "xb": 
-                         if ratplatforms.find("xb") > -1:
+                    elif caseplatform == "XB": 
+                         if ratplatforms.find("XB") > -1:
                               if cr == True :
                                    scr.play()
                               else:
