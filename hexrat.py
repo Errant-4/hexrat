@@ -1,5 +1,5 @@
 __module_name__ = 'hexrat'
-__module_version__ = 'v0414.1823'
+__module_version__ = 'v0417.0822'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -19,7 +19,8 @@ elif platform.system() == "Windows":
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
      logging = False
      
-ratplatforms = "hori" # In case of old config file without <platforms>
+ratplatforms = "PC" # In case of old config file without <platforms>
+startupgrab = False
 
 file = open(Path(filepath, "hexrat.conf"),"r")
 config = file.read().splitlines()
@@ -67,6 +68,12 @@ for i in config:
           copymode = i[10:]
      elif i[:11] == "<platforms>": 
           ratplatforms = i[11:]
+     elif i[:13] == "<startupgrab>": 
+          try:
+               startupgrab = bool(i[13:])
+          except:
+               print("\00304 Problem in hexrat.cfg! <startupgrab> can only be True of False")
+               pass
                 
 alive = "#fuelrats" # target for calls/reports/facts
 asafe = hexchat.get_info("nick") # target for safe mode messages
@@ -79,6 +86,9 @@ spatcher = "Stuffy"
 hexback = False
 clients = ["","","","","","","","","","",]
 systems = ["","","","","","","","","","",]
+plats = ["","","","","","","","","","",]
+crits = [False,False,False,False,False,False,False,False,False,False,]
+
 as_casenum = "NO CASE ASSIGNED GO AWAY"
 as_client = "NO CASE ASSIGNED GO AWAY"
 
@@ -98,18 +108,23 @@ def mode_cb(word, word_eol, userdata): #Hide mode changes in #fuelrats
      else:
           return hexchat.EAT_NONE
 def join_cb(word, word_eol, userdata): #Shorten all Join messages
+     global ratmode, plats
      mess = hexchat.strip(word[2])
      if word[0] in clients:
           for i in range (10):
+               if ratmode == "dispatch":
+                    platfix = plats[i] + " "
+               else:
+                    platfix = ""
                if word[0] == clients[i]:
-                    print("\00327#" + str(i) + "\00314 " + word[0] + "\00327 joined")
+                    print("\00327"  + platfix + "#" + str(i) + "\00314 " + word[0] + "\00327 joined")
                     return hexchat.EAT_ALL
      else:
           print("\00319" + word[0] + " joined " + mess[mess.find("@"):])
      return hexchat.EAT_ALL
           
 def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
-     global as_client
+     global as_client, ratmode, plats
      mess = hexchat.strip(word[2])
      stock = ["FuelRats Web IRC - Provided by KiwiIRC","Connection closed","Going offline, see ya! (www.adiirc.com)","Leaving"]
      reason = ""
@@ -128,12 +143,16 @@ def quit_cb(word, word_eol, userdata): #Shorten Quit/leave messages in #fuelrats
                
                if word[0] == clients[i]:
                     your = ""
+                    if ratmode == "dispatch":
+                         platfix = plats[i] + " "
+                    else:
+                         platfix = ""
 
                     if reason.upper().find("BANNED"): #Ban notifications are given extra space
                          j = 777
                     if as_client == word[0]:
                          your = "\00304\026\00316Your client "
-                    print( your + "\00304\026\00316#" + str(i) + "\00317\026\00314 " + word[0] + " \00304\026\00316quit\00317\026\00314 " + reason[:j-len(word[0])-len(your)])
+                    print( your + "\00304\026\00316"  + platfix + "#" + str(i) + "\00317\026\00314 " + word[0] + " \00304\026\00316quit\00317\026\00314 " + reason[:j-len(word[0])-len(your)])
                     return hexchat.EAT_ALL
      elif hexchat.get_info("channel") == "#fuelrats":
           print("\00314" + word[0] + " quit " + reason[:j-len(word[0])])
@@ -171,7 +190,7 @@ def nick_cb(word, word_eol, userdata): # Nick change, tracked in case clients ch
      return hexchat.EAT_NONE
 
 def chatwatch_cb(word, word_eol, userdata):
-     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode, ratplatforms
+     global soundpath, clients, systems, ratmode, as_casenum, as_client, spatcher, gr1, copymode, ratplatforms, plats, crits
      nick = hexchat.strip(word[0])
      mess = hexchat.strip(word[1])
      MESS = mess.upper()
@@ -189,28 +208,29 @@ def chatwatch_cb(word, word_eol, userdata):
      if hexchat.get_info("channel") == "#ratchat" and nick == spatcher and MESS.find("JUST PREP") > -1:
           spatcher = "Stuffy"
           hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< thinks the Dispatcher is actually not.')
-
+     
      if MESS[:9]=='RATSIGNAL':
-          
-          if mess.find("(Code Red)") > -1:
-               cr = True
-          else:
-               cr = False
-               
-          if mess.find("(Odyssey)") > -1:
-               caseplatform = "ody"
-          elif mess.find("(PC_SIGNAL)") > -1:
-               caseplatform = "hori"
-          elif mess.find("(PS_SIGNAL)") > -1:
-               caseplatform = "ps"
-          elif mess.find("(XB_SIGNAL)") > -1:
-               caseplatform = "xb"
-          else:
-               caseplatform = ""
-               
+
           if mess.find("#") == 15: # This looks like a legit ratsignal
+           
+               if mess.find("(Code Red)") > -1:
+                    cr = True
+               else:
+                    cr = False
+               
+               if mess.find("(Odyssey)") > -1:
+                    caseplatform = "PC-O"
+               elif mess.find("(PC_SIGNAL)") > -1:
+                    caseplatform = "PC"
+               elif mess.find("(PS_SIGNAL)") > -1:
+                    caseplatform = "PS"
+               elif mess.find("(XB_SIGNAL)") > -1:
+                    caseplatform = "XB"
+               else:
+                    caseplatform = ""
                
                casenum = int(mess[16:18].strip())
+               plats[casenum] = caseplatform
 
                i = mess.find(" – System: ") +12
                j = mess[i:].find("\"")
@@ -297,35 +317,36 @@ def chatwatch_cb(word, word_eol, userdata):
                     except:
                          print("\00316>>HEXRAT<< can't access clipboard!")
                
+               print(caseplatform)
                if ratmode == "silent":
                     pass
                elif ratmode == "rat":
-                    if caseplatform == "ody": 
-                         if ratplatforms.find("ody") > -1:
+                    if caseplatform == "PC-O": 
+                         if ratplatforms.find("PC-O") > -1:
                               if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif caseplatform == "hori": 
-                         if ratplatforms.find("hori") > -1:
+                    elif caseplatform == "PC": 
+                         if ratplatforms.find("PC") > -1:
                               if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif caseplatform == "ps": 
-                         if ratplatforms.find("ps") > -1:
+                    elif caseplatform == "PS": 
+                         if ratplatforms.find("PS") > -1:
                               if cr == True :
                                    scr.play()
                               else:
                                    sst.play()
                          else:
                               ssk.play()
-                    elif caseplatform == "xb": 
-                         if ratplatforms.find("xb") > -1:
+                    elif caseplatform == "XB":
+                         if ratplatforms.find("XB") > -1:
                               if cr == True :
                                    scr.play()
                               else:
@@ -348,33 +369,33 @@ def chatwatch_cb(word, word_eol, userdata):
 
      # Message was not a Ratsignal
      
-     elif (nick == mecha or nick == drillbot) and mess[:26] == 'Successfully closed case #': # case closed
-          i = int(mess[26:28].strip())
-
+     elif (nick == mecha or nick == drillbot) and (mess[:26] == 'Successfully closed case #' or mess[:25] == 'Successfully added case #'): # case closed
+          #i = int(mess[26:28].strip())
+          try:
+               i = int(mess[mess.find("case #")+6:mess.find("case #")+8].strip())
+          except:
+               print("\00304\026Cyan Error!")
+               smgs.play()
+               
           if as_casenum == str(i):
                clear_cb("","","")
           try:
                print("\00321" + nick + " cleared #" + str(i) + " " + clients[i])
           except:
+               print("\00304\026Scarlet Error!")
+               smgs.play()
                print("\00321" + nick + ": " + mess)
+               
           clients[i] = ""
           systems[i] = ""
+          plats[i] = ""
+          crits[i] = False
           
           if clients[0] + clients[1] +clients[2] +clients[3] +clients[4] +clients[5] +clients[6] +clients[7] +clients[8] +clients[9] == "" and spatcher[-7:].upper() != "SPATCH]":
                hexchat.find_context(channel="#ratchat").prnt('\00316>>HEXRAT<< cleared all cases. Dispatcher vaporized.')
                spatcher = "Stuffy"
           return hexchat.EAT_ALL
 
-     elif (nick == mecha or nick == drillbot) and mess[:25] == 'Successfully added case #': # case closed
-          i = int(mess[25:27].strip())
-
-          clients[i] = ""
-          systems[i] = ""
-          if as_casenum == str(i):
-               clear_cb("","","")
-          print("\00321" + nick + ": " + mess)
-          return hexchat.EAT_ALL     
-  
      elif mess[:25] == 'Caution: Client of case #': # client left
           return hexchat.EAT_ALL
 
@@ -424,19 +445,27 @@ def chatwatch_cb(word, word_eol, userdata):
           return hexchat.EAT_ALL
 
      elif (nick == as_client): #Highlight the tracked client
+          if ratmode == "dispatch":
+               platfix = plats[int(as_casenum)] + " "
+          else:
+               platfix = ""
           if userdata=="action":
-               print(" * \00303\026#" + as_casenum + " " + nick + "\00317\026\00303 " + mess)
+               print(" * \00303\026"  + platfix + "#" + as_casenum + " " + nick + "\00317\026\00303 " + mess)
           else:      
-               print("\00303\026#" + as_casenum + " " + nick + ":\00317\026\00303 " + mess)
+               print("\00303\026"  + platfix + "#" + as_casenum + " " + nick + ":\00317\026\00303 " + mess)
           return hexchat.EAT_ALL
           
      elif nick in clients: # tag non-tracked clients with case number
           for i in range (10):
                if nick == clients[i]:
-                    if userdata=="action":
-                         print(" * \00312#" + str(i) + " \00312" + nick + "\00307 " + mess)
+                    if ratmode == "dispatch":
+                         platfix = plats[i] + " "
                     else:
-                         print("\00312#" + str(i) + " \00312" + nick + ":\00323 " + mess)
+                         platfix = ""
+                    if userdata=="action":
+                         print(" * \00312"  + platfix + "#" + str(i) + " \00312" + nick + "\00307 " + mess)
+                    else:
+                         print("\00312"  + platfix + "#" + str(i) + " \00312" + nick + ":\00323 " + mess)
           return hexchat.EAT_ALL
                 
      #elif (mess.find(as_client) > -1) or (mess.find("#" + as_casenum) > -1): #Highlight mentions of the tracked case or client
@@ -460,18 +489,14 @@ def chatwatch_cb(word, word_eol, userdata):
           else:
                print("\00308\026\00317" + modechar + nick + "\00317\026\00323: " + mess)
           return hexchat.EAT_ALL
-
-     elif mess[:1]=='#' and len(mess) < 17:
+     #elif mess[:1]=='#' and len(mess) < 17: #highlight all other reports
+     elif mess[:1]=='#': #highlight all other reports
           print("\00308" + modechar + nick + ": \00322" + mess)
           return hexchat.EAT_ALL
 
-     elif hexchat.get_info("channel") == alive and MESS.find("IN OPEN") > -1:
+     elif hexchat.get_info("channel") == alive and MESS.find("IN OPEN") > -1: # highlight IN OPEN
           print("\00308" + modechar + nick + ": \00323" + mess[:MESS.find("IN OPEN")] + "\00304\026\00316" + mess[MESS.find("IN OPEN"):MESS.find("IN OPEN")+7] + "\00317\026\00323" + mess[MESS.find("IN OPEN")+7:])
           #print("\00308" + modechar + nick + ": \00320\026" + mess)
-          return hexchat.EAT_ALL
-
-     elif mess[:1]=='#' and len(mess) < 17:
-          print("\00308" + modechar + nick + ": \00322" + mess)
           return hexchat.EAT_ALL
    
      elif nick in gr1 and hexchat.get_info("channel") == "#ratchat": # example custom color rule. All lines on ratchat
@@ -485,7 +510,24 @@ def chatwatch_cb(word, word_eol, userdata):
 
 def private_cb(word, word_eol, userdata): # Display all private messages in the #ratchat window
      hexchat.find_context(channel="#ratchat").prnt("\00304   " + word[0] + " whispers: " + word[1])
-     
+     nick = hexchat.strip(word[0])
+     mess = hexchat.strip(word[1])
+     protobatch = ("","","","","","","","","","")
+     try:
+          if nick == "MechaSqueak[BOT]" and mess.find(" found: #") > -1:
+               if mess.find("), ") > -1:
+                    print("a")
+                    while mess.find("), ") > -1:
+                         print(mess[mess.find(" found: #")+9:mess.find("), ")+1])
+                         mess = mess[mess.find("), ")+4:]
+               else:
+                    print("b")
+                    print(mess[mess.find(" found: #")+9:])
+          else: 
+               hexchat.find_context(channel="#ratchat").prnt("\00304   " + word[0] + " whispers: " + word[1])          
+     except:
+          print("\00304\026Azure Error!")
+          smgs.play()
      return hexchat.EAT_NONE   
           
 def pull_cb(word, word_eol, userdata):
@@ -670,8 +712,7 @@ def clear_cb(word, word_eol, userdata):
      return hexchat.EAT_ALL
 
 def board_cb(word, word_eol, userdata):
-     global clients, systems, as_casenum, as_client
-     
+     global clients, systems, as_casenum, as_client, plats
      try:
         a = word[1]
      except:
@@ -718,6 +759,18 @@ def board_cb(word, word_eol, userdata):
           except:
                hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< says no. Try /board_set <number> <clientname>")      
           return hexchat.EAT_ALL
+          
+     elif word[1] == "setplat":
+          try:
+               lop = ("PC","PC-O","PS","XB")
+               if clients[int(word[2])] != "" and word[3] in lop:
+                    plats[int(word[2])] = word[3]
+                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< sets client " + word[2] + "'s platform to " + word[3])
+               else:
+                    hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< says no to " + word_eol[0] + ". Try /board setplat number platform") 
+          except:
+               #hexchat.find_context(channel="#ratchat").prnt("\00304>>HEXRAT<< says no to " + word_eol[0] + ". Try /board setplat number platform")      
+                    return hexchat.EAT_ALL
      elif word[1] == "clear":
           try:
                if word[2] == "all":
@@ -727,15 +780,19 @@ def board_cb(word, word_eol, userdata):
                               hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared #" + str(i))
                               clients[i] = ""
                               systems[i] = ""
+                              plats[i] = ""
+                              crits[i] = False
                else:
                          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< cleared #"+word[1])
                          clients[int(word[2])] = ""
                          systems[int(word[2])] = ""
+                         plats[int(word[2])] = ""
+                         crits[int(word[2])] = False
           except:
                hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< couldn't clear the board")      
           return hexchat.EAT_ALL
      else:
-          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< can't understand" + word_eol[0])
+          hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< can't understand" + word_eol[0] + " . Valid parameters are show, set, setplat and clear")
           pass
      
 def safe_cb(word, word_eol, userdata):
@@ -789,9 +846,11 @@ def hat_cb(word, word_eol, userdata):
      return hexchat.EAT_ALL	
      
 def open_cb(word, word_eol, userdata):
+     global startupgrab
      if hexchat.get_info("channel") == "#ratchat":
           hexchat.find_context(channel="#ratchat").prnt("\00316>>HEXRAT<< watches your every move. Type /hexhelp if this scares you")
-          hexchat.command("msg MechaSqueak[BOT] !list")
+          if startupgrab == True:
+               hexchat.command("msg MechaSqueak[BOT] !list")
 def justprep_cb(word,word_eol,userdata):
      global clients, aliastarget, asafe
      case = 999
@@ -910,3 +969,4 @@ hexchat.hook_print("Open Context", open_cb)
 
 print("\00316>>HEXRAT<< " + __module_version__ +  " initialized")
 sbar.play()
+
