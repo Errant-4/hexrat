@@ -16,7 +16,9 @@ It should not throw errors at you anymore, if it does please let me know
 
 5. Optional: put hexrat-loader.py in Hexchat/addons if you want to be able to refresh/load hexrat with a single command (/hr). You shouldn't need this for normal use
 
-# Known issues: 
+# Known issues:
+
+Several things are sent to #ratchat as a notification, and will throw ugly errors if you are not in #ratchat when you try to use them
 
 ~~it will throw errors if it's left running while the desktop is locked, because it won't be able to reach the clipboard~~
 
