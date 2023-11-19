@@ -295,7 +295,7 @@ def chatwatch_cb(word, word_eol, userdata):
                     print("\00304\026\00316Probably unroutable system!")
                     casclip = casclip + "."
                # This whole "distance thing needs a rework"
-               sysrefcheck = ["","Sol","Maia","Rodentia","Fuelum"]
+               sysrefcheck = ["","Sol","Maia","Rodentia","Fuelum","Rohini"]
                sysref = ""
                if mess.find(" LY from ") > -1:
                     i = mess.find(" LY from ") + 9
