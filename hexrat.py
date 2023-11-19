@@ -294,20 +294,20 @@ def chatwatch_cb(word, word_eol, userdata):
                if mess.find('" (Unconfirmed ') > -1 or mess.find('Invalid system name') > -1 or mess.find("Permit Required") > -1:
                     print("\00304\026\00316Probably unroutable system!")
                     casclip = casclip + "."
-
+               # This whole "distance thing needs a rework"
                sysrefcheck = ["","Sol","Maia","Rodentia","Fuelum"]
                sysref = ""
                if mess.find(" LY from ") > -1:
                     i = mess.find(" LY from ") + 9
                     j = mess[i:].find(")")
                     sysref = mess[i:i+j]
-                    
+               
+               distb = 9999 # Fix this ugly failsafe at some point
                if sysref not in sysrefcheck:
                     if ratmode != "silent":
                          smgs.play()
                     print("\00304 Unlisted reference point! \00315"+ sysref)
                else:
-                    d1 = sysref #########################################################################################################################################
                     if sysref == "Sol":
                          distb = 174
                     elif sysref == "Fuelum":
@@ -316,6 +316,8 @@ def chatwatch_cb(word, word_eol, userdata):
                          distb = 383
                     elif sysref == "Rodentia":
                          distb = 22112
+                    elif sysref == "Rohini":
+                         distb = 7600
 
                distance = "999"
                       
@@ -330,7 +332,7 @@ def chatwatch_cb(word, word_eol, userdata):
                          distance = distance[:-2]
                     d4 = distance ######################################################################################################################################
                     d5 = distb #########################################################################################################################################
-                    print("\00301System: " + d1 + " | " + str(d2) + " | " + str(d3) + " | Dist " + str(d4) +" | RefDist " + str(d5)) ###################################
+                    print("\00301System: " + sysref + " | " + str(d2) + " | " + str(d3) + " | Dist " + str(d4) +" | RefDist " + str(d5)) ###################################
                     try:
                          totaldist = int(distance) + distb
                          #totaldist = (int(distance) + distb)*0.8 ###########################################################################################
