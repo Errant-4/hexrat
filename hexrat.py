@@ -1,29 +1,5 @@
-"""  TO DO:
-
-- /we should be targeted at case number, not String
-
-- show CR status /tag on client prefixes? Perhaps by color?
-
-- see if Track and Pull needs to be merged?
-
-- Dispatch mode could use differently colored clients/cases?
-
-- Move aliases to an external file?
-
-
-
-- fix that ugly soundpath workaround
-
-- check everything for 2-digit case compatibility
-
-- color and formatting settings via variables?
-
-- a config variable for Mecha shortening
-
-"""
-
 __module_name__ = 'hexrat'
-__module_version__ = 'v231110.0830'
+__module_version__ = 'v0.9'
 __module_description__ = 'SQUEAK!'
 
 import hexchat
@@ -38,16 +14,15 @@ mixer.init()
 
 if platform.system() == "Linux":
      filepath = Path(Path.home(), ".config/hexchat")
-     logging = False
 elif platform.system() == "Windows": 
      filepath = Path(Path.home(), "AppData/Roaming/HexChat")
-     logging = True   ################ Switch to False in released version! ################ Switch to False in released version! ################ Switch to False in released version! ################
-     
-ratplatforms = "PC-H" # In case of old config file without <platforms>
-startupgrab = True  ################ Switch to False in released version! ################ Switch to False in released version!
+
+#Default values, overruled by config file
+logging = True
+ratplatforms = "PC-H"
+startupgrab = True 
 mechacap = 102
 quitcap = 51
-################ Switch to False in released version! ################
 
 file = open(Path(filepath, "hexrat.conf"),"r")
 config = file.read().splitlines()
@@ -110,7 +85,12 @@ for i in config:
                quitcap = int(i[9:])
           except:
                print("\00304 Problem in hexrat.cfg! <quitcap> can only be a number. Defaulting to " + str(quitcap))
-                
+     elif i[:9] == "<logging>":
+          try:
+               logging =  bool(i[9:])
+          except:
+               print("\00304 Problem in hexrat.cfg! <quitcap> can only be a number. Defaulting to " + str(quitcap))
+
 alive = "#fuelrats" # target for calls/reports/facts
 asafe = hexchat.get_info("nick") # target for safe mode messages
 
@@ -690,13 +670,8 @@ def focus_cb(word, word_eol, userdata):
           #     logfile.close()     
 
 
-#RESERVED SPACE
 
-
-     #   TO DO:  malware payload that spams Aisling Duval propaganda
-
-
-# END OF RESERVED SPACE
+ #   TO DO:  malware payload that spams Aisling Duval propaganda
 
 
 
