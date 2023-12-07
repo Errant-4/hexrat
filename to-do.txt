@@ -1,0 +1,21 @@
+/we should be targeted at case number, not String
+
+show CR status /tag on client prefixes? Perhaps by color?
+
+see if Track and Pull needs to be merged?
+all VA input/output handling should be reviewed
+
+Dispatch mode could use differently colored clients/cases?
+
+Move aliases to an external file?
+
+fix that ugly soundpath workaround
+
+check everything for 2-digit case compatibility
+
+color and formatting settings via variables?
+
+a config variable for Mecha shortening
+
+"rats failed to assign"
+mecha messages should only be suppressed when confirmed unimportant. whitelist messages
